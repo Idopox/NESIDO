@@ -50,7 +50,9 @@ private:
     void SetFlag(Flags f, bool state);
 
     uint8_t cycles = 0;
-    uint8_t clock_count;
+    uint8_t clockCount;
+    uint16_t operandAddr;
+    uint16_t relAddr;
 
     Bus *bus = nullptr;
 
@@ -58,7 +60,6 @@ private:
     uint8_t read(uint16_t addr);
 
     //ADDRESSING MODES
-    uint8_t ACC();
     uint8_t IMM();
     uint8_t IMP();
     uint8_t REL();
