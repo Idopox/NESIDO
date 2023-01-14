@@ -13,10 +13,11 @@ public:
 
     CPU cpu;
 
-    uint8_t cpu_ram[2048];
+    uint8_t cpuRam[2048];
 
 public: 
 
-    void cpu_write()
+    void cpuWrite(uint8_t data, uint16_t addr);
+    uint8_t cpuRead(uint16_t addr);
 
 };
