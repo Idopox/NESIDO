@@ -64,7 +64,7 @@ private:
     uint8_t IMP();
     uint8_t REL();
     uint8_t ABS();
-    uint8_t ZPP();
+    uint8_t ZPG();
     uint8_t IND();
     uint8_t ABX();
     uint8_t ABY();
