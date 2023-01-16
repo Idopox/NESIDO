@@ -4,7 +4,7 @@
 
 CPU::CPU()
 {
-    
+
 }
 
 CPU::~CPU()
@@ -49,6 +49,7 @@ uint8_t CPU::IMM()
 // Immediate Addressing mode - The operand is being specified within the opcode.
 uint8_t CPU::IMP()
 {
+    operandAddr = -1;
     return 0;
 }
 
@@ -143,5 +144,333 @@ uint8_t CPU::INY()
 // Extracting the data used by the instruction
 uint8_t CPU::fetch()
 {
-    return read(operandAddr);
+    // operandAddr = -1 if the addressing mode is implied and then the operand is a register.
+    if (operandAddr != -1)
+    {
+        return read(operandAddr);
+    }
+    return a; 
 }
+
+
+// OPCODES
+
+uint8_t CPU::LDA()
+{
+    a = fetch();
+    SetFlag(Z, a == 0x00);
+    SetFlag(N, a & 0x80);
+    return 1;
+}
+
+uint8_t CPU::LDX()
+{
+    x = fetch();
+    SetFlag(Z, a == 0x00);
+    SetFlag(N, a & 0x80);
+    return 1;
+}
+
+uint8_t CPU::LDY()
+{
+    y = fetch();
+    SetFlag(Z, a == 0x00);
+    SetFlag(N, a & 0x80);
+    return 1;
+}
+
+uint8_t CPU::STA()
+{
+    write(a,operandAddr);
+    return 0;
+}
+
+uint8_t CPU::STX()
+{
+    write(x,operandAddr);
+    return 0;
+}
+
+uint8_t CPU::STY()
+{
+    write(y,operandAddr);
+    return 0;
+}
+
+uint8_t CPU::TAX()
+{
+    x = a;
+    SetFlag(Z, x == 0x00);
+    SetFlag(N, x & 0x80);
+    return 0;
+}
+
+uint8_t CPU::TAY()
+{
+    y = a;
+    SetFlag(Z, y == 0x00);
+    SetFlag(N, y & 0x80);
+    return 0;
+}
+
+uint8_t CPU::TXA()
+{
+    a = x;
+    SetFlag(Z, a == 0x00);
+    SetFlag(N, a & 0x80);
+    return 0;
+}
+
+uint8_t CPU::TYA()
+{
+    a = y;
+    SetFlag(Z, a == 0x00);
+    SetFlag(N, a & 0x80);
+    return 0;
+}
+
+uint8_t CPU::TSX()
+{
+    x = sp;
+    SetFlag(Z, x == 0x00);
+    SetFlag(N, x & 0x80);
+    return 0;
+}
+
+uint8_t CPU::TXS()
+{
+    sp = x;
+    SetFlag(Z, sp == 0x00);
+    SetFlag(N, sp & 0x80);
+    return 0;
+}
+
+uint8_t CPU::PHA()
+{
+    write(a,0x0100 + sp--);
+    return 0;
+}
+
+uint8_t CPU::PHP()
+{
+    
+}
+
+uint8_t CPU::PLA()
+{
+    
+}
+
+uint8_t CPU::PLP()
+{
+    
+}
+
+uint8_t CPU::AND()
+{
+    
+}
+
+uint8_t CPU::EOR()
+{
+    
+}
+
+uint8_t CPU::ORA()
+{
+    
+}
+
+uint8_t CPU::BIT()
+{
+    
+}
+
+uint8_t CPU::ADC()
+{
+    
+}
+
+uint8_t CPU::SBC()
+{
+    
+}
+
+uint8_t CPU::CMP()
+{
+    
+}
+
+uint8_t CPU::CPX()
+{
+    
+}
+
+uint8_t CPU::CPY()
+{
+    
+}
+
+uint8_t CPU::INC()
+{
+    
+}
+
+uint8_t CPU::INX()
+{
+    
+}
+
+uint8_t CPU::INY()
+{
+    
+}
+
+uint8_t CPU::DEC()
+{
+    
+}
+
+uint8_t CPU::DEX()
+{
+    
+}
+
+uint8_t CPU::DEY()
+{
+    
+}
+
+uint8_t CPU::ASL()
+{
+    
+}
+
+uint8_t CPU::LSR()
+{
+    
+}
+
+uint8_t CPU::ROL()
+{
+    
+}
+
+uint8_t CPU::ROR()
+{
+    
+}
+
+uint8_t CPU::JMP()
+{
+    
+}
+
+uint8_t CPU::JSR()
+{
+    
+}
+
+uint8_t CPU::RTS()
+{
+    
+}
+
+uint8_t CPU::BCC()
+{
+    
+}
+
+uint8_t CPU::BCS()
+{
+    
+}
+
+uint8_t CPU::BEQ()
+{
+    
+}
+
+uint8_t CPU::BMI()
+{
+    
+}
+
+uint8_t CPU::BNE()
+{
+    
+}
+
+uint8_t CPU::BPL()
+{
+    
+}
+
+uint8_t CPU::BVC()
+{
+    
+}
+
+uint8_t CPU::BVS()
+{
+    
+}
+
+uint8_t CPU::CLC()
+{
+    
+}
+
+uint8_t CPU::CLD()
+{
+    
+}
+
+uint8_t CPU::CLI()
+{
+    
+}
+
+uint8_t CPU::CLV()
+{
+    
+}
+
+uint8_t CPU::SEC()
+{
+    
+}
+
+uint8_t CPU::SED()
+{
+    
+}
+
+uint8_t CPU::SEI()
+{
+    
+}
+
+uint8_t CPU::NOP()
+{
+    
+}
+
+uint8_t CPU::BRK()
+{
+    
+}
+
+uint8_t CPU::RTI()
+{
+    
+}
+
+uint8_t CPU::XXX()
+{
+    
+}
+
+
+
+

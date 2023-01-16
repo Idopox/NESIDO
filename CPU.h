@@ -1,7 +1,8 @@
 #pragma once
 
 #include <stdint.h>
-
+#include <string>
+#include <vector>
 #include "Bus.h"
 
 class CPU
