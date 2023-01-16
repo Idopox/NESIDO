@@ -45,6 +45,9 @@ private:
         V = (1 << 6), // Overflow
         N = (1 << 7) // Negative
     };
+    enum eIndexReg{
+        X, Y, None
+    };
 
     uint8_t GetFlag(Flags f);
     void SetFlag(Flags f, bool state);
@@ -53,6 +56,7 @@ private:
     uint8_t clockCount;
     uint16_t operandAddr;
     uint16_t relAddr;
+    uint8_t fetch();
 
     Bus *bus = nullptr;
 
@@ -63,11 +67,9 @@ private:
     uint8_t IMM();
     uint8_t IMP();
     uint8_t REL();
-    uint8_t ABS();
-    uint8_t ZPG();
+    uint8_t ABS(eIndexReg reg);
+    uint8_t ZPG(eIndexReg reg);
     uint8_t IND();
-    uint8_t ABX();
-    uint8_t ABY();
     uint8_t ZPX();
     uint8_t ZPY();
     uint8_t INX();
