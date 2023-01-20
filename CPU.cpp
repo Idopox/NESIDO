@@ -40,6 +40,7 @@ uint8_t CPU::read(uint16_t addr)
 //ADDRESSING MODES
 
 // Immediate Addressing mode - The operand will be in the next byte.
+// To obtain the operand after call, read byte at pc
 uint8_t CPU::IMM()
 {
     operandAddr = pc++;
@@ -49,11 +50,12 @@ uint8_t CPU::IMM()
 // Immediate Addressing mode - The operand is being specified within the opcode.
 uint8_t CPU::IMP()
 {
-    operandAddr = -1;
+    implied = true;
     return 0;
 }
 
 // Relative Addressing mode - The operand is a signed 8 bit relative offset in the next byte.
+// The operand will be saved in relAddr var
 uint8_t CPU::REL()
 {
     relAddr = read(pc++);
@@ -65,6 +67,7 @@ uint8_t CPU::REL()
 }
 
 // Absolute Addressing mode - The operand is 16 bit address in the next two bytes.
+// The address will be kept in operandAddr var (no need to fetch after using this function)
 uint8_t CPU::ABS(eIndexReg reg = CPU::eIndexReg::None)
 {
     uint8_t lowAddr = read(pc++);
@@ -86,6 +89,7 @@ uint8_t CPU::ABS(eIndexReg reg = CPU::eIndexReg::None)
 }
 
 // Zero Page Addressing mode - The operand is 8 bit offset in the zero page (0x00??).
+// The address will be kept in operandAddr var (no need to fetch after using this function)
 uint8_t CPU::ZPG(eIndexReg reg = CPU::eIndexReg::None)
 {
     uint8_t indexed = (reg = CPU::eIndexReg::X) ? x : (reg == CPU::eIndexReg::Y) ? y : 0;
@@ -94,6 +98,7 @@ uint8_t CPU::ZPG(eIndexReg reg = CPU::eIndexReg::None)
 }
 
 // Indirect Addressing mode - The operand is 16 bit address stored in address in the next two bytes.
+// The address will be kept in operandAddr var (no need to fetch after using this function)
 uint8_t CPU::IND()
 {
     uint8_t lowAddr = read(pc++);
@@ -116,6 +121,7 @@ uint8_t CPU::IND()
 }
 
 // Indexed Indirect Addressing mode - The operand is 16 bit address stored in address in the zeropage. the offset in the next byte + x register
+// The address will be kept in operandAddr var (no need to fetch after using this function)
 uint8_t CPU::INX()
 {
     uint16_t pointer = read(pc++);
@@ -126,6 +132,7 @@ uint8_t CPU::INX()
 }
 
 // Indirect Indexed Addressing mode - The operand is 16 bit address stored in address in the zeropage. the offset in the next byte + y register
+// The address will be kept in operandAddr var (no need to fetch after using this function)
 uint8_t CPU::INY()
 {
     uint16_t pointer = read(pc++);
@@ -144,8 +151,8 @@ uint8_t CPU::INY()
 // Extracting the data used by the instruction
 uint8_t CPU::fetch()
 {
-    // operandAddr = -1 if the addressing mode is implied and then the operand is a register.
-    if (operandAddr != -1)
+    // implied = true if the addressing mode is implied and then the operand is a register.
+    if (!implied)
     {
         return read(operandAddr);
     }
@@ -153,7 +160,7 @@ uint8_t CPU::fetch()
 }
 
 
-// OPCODES
+// INSTRUCTIONS
 
 uint8_t CPU::LDA()
 {
@@ -253,107 +260,342 @@ uint8_t CPU::PHA()
 
 uint8_t CPU::PHP()
 {
-    
+    write(status, sp--);
+    return 0;
 }
 
 uint8_t CPU::PLA()
 {
-    
+    a = read(sp++);
+    SetFlag(Z, a == 0x00);
+    SetFlag(N, a & 0x80);
+    return 0;
 }
 
 uint8_t CPU::PLP()
 {
-    
+    status = read(sp++);
+    return 0;
 }
 
 uint8_t CPU::AND()
 {
-    
+    uint8_t mem = fetch();
+    a &= mem;
+    SetFlag(Z, a == 0x00);
+    SetFlag(N, a & 0x80);
+    return 1;
 }
 
 uint8_t CPU::EOR()
 {
-    
+    uint8_t mem = fetch();
+    a ^= mem;
+    SetFlag(Z, a == 0x00);
+    SetFlag(N, a & 0x80);
+    return 1;
 }
 
 uint8_t CPU::ORA()
 {
-    
+    uint8_t mem = fetch();
+    a |= mem;
+    SetFlag(Z, a == 0x00);
+    SetFlag(N, a & 0x80);
+    return 1;
 }
 
 uint8_t CPU::BIT()
 {
-    
+    uint8_t mem = fetch();
+    SetFlag(Z, (mem & a) == 0x00);
+    SetFlag(N, mem & 0x80);
+    SetFlag(V, mem & 0x40);
+    return 0;
 }
 
+// ADC - Add Memory to Accumulator with Carry
+//
+//  The ADC instruction adds the contents of a memory location to the
+//  accumulator together with the carry bit. If overflow occurs the
+//  carry bit is set, this enables multiple byte addition to be performed
+//
+//  Flags affected:
+//      N - Set if result is negative
+//      Z - Set if result is zero
+//      C - Set if carry from the addition
+//      V - Set if overflow, i.e. sign bit is incorrect
 uint8_t CPU::ADC()
 {
-    
+    uint8_t mem = fetch();
+    uint16_t result = (uint16_t)mem + uint16_t(a) + uint16_t(GetFlag(C));
+    SetFlag(C, result > 255);
+    SetFlag(V, (!((a ^ mem) & 0x80) && ((a^ result) & 0x80))); 
+    a = 0x00FF & result;
+    SetFlag(Z, a == 0x00);
+    SetFlag(N, a & 0x80);
+
+
+    return 1;
 }
 
+// SBC - Subtract Memory from Accumulator with Borrow
+//
+// The SBC instruction subtracts the contents of a memory location
+// from the accumulator together with the not of the carry bit.
+// If overflow occurs the carry bit is set, this enables multiple byte
+// subtraction to be performed.
+//
+// Flags affected:
+// N - Set if result is negative
+// Z - Set if result is zero
+// C - Set if no borrow from the subtraction
+// V - Set if overflow, i.e. sign bit is incorrect
 uint8_t CPU::SBC()
 {
-    
+    uint8_t mem = fetch();
+    uint16_t result =  uint16_t(a) - (uint16_t)mem - uint16_t(1-GetFlag(C));
+    SetFlag(C, result > 0x00);
+    SetFlag(V, (((a ^ mem) & 0x80) && ((a ^ result) & 0x80))); 
+    a = 0x00FF & result;
+    SetFlag(Z, a == 0x00);
+    SetFlag(N, a & 0x80);
+    return 1;
 }
 
+// CMP - Compare Memory and Accumulator
+//
+// The CMP instruction compares the contents of the accumulator to
+// the contents of a memory location. If the accumulator is equal to or
+// greater than the memory location, the carry flag is set. Otherwise,
+// the carry flag is cleared.
+//
+// Flags affected:
+// C - Set if the accumulator >= memory
+// Z - Set if the accumulator == memory
+// N - Set if the result is negative
 uint8_t CPU::CMP()
 {
-    
+    uint8_t mem = fetch();
+    uint8_t cmp = a - mem;
+    SetFlag(C, cmp >= 0x00);
+    SetFlag(Z, cmp == 0x00);
+    SetFlag(N, cmp & 0x80);
 }
 
+// CPX - Compare Memory and X
+//
+// The CPX instruction compares the contents of the x register to
+// the contents of a memory location. If the x register is equal to or
+// greater than the memory location, the carry flag is set. Otherwise,
+// the carry flag is cleared.
+//
+// Flags affected:
+// C - Set if the x  >= memory
+// Z - Set if the x == memory
+// N - Set if the result is negative
 uint8_t CPU::CPX()
 {
-    
+    uint8_t mem = fetch();
+    uint8_t cmp = x - mem;
+    SetFlag(C, cmp >= 0x00);
+    SetFlag(Z, cmp == 0x00);
+    SetFlag(N, cmp & 0x80);
+    return 0;
 }
 
+// CPY - Compare Memory and Y
+//
+// The CPY instruction compares the contents of the y register to
+// the contents of a memory location. If the y register is equal to or
+// greater than the memory location, the carry flag is set. Otherwise,
+// the carry flag is cleared.
+//
+// Flags affected:
+// C - Set if the y  >= memory
+// Z - Set if the y == memory
+// N - Set if the result is negative
 uint8_t CPU::CPY()
 {
-    
+    uint8_t mem = fetch();
+    uint8_t cmp = y - mem;
+    SetFlag(C, cmp >= 0x00);
+    SetFlag(Z, cmp == 0x00);
+    SetFlag(N, cmp & 0x80);
+    return 0;
 }
 
+// INC - Increment Memory by One
+//
+// The INC instruction increments the contents of a memory location by
+// one.
+//
+// Flags affected:
+// Z - Set if the result is zero
+// N - Set if the result is negative
 uint8_t CPU::INC()
 {
-    
+    uint8_t res = fetch()+1;
+    write(res, operandAddr);
+    SetFlag(Z, res == 0x00);
+    SetFlag(N, res & 0x80);
+    return 0;
 }
 
+// INX - Increment X by One
+//
+// The INX instruction increments the contents of the X register by one.
+//
+// Flags affected:
+// Z - Set if the result is zero
+// N - Set if the result is negative
 uint8_t CPU::INX()
 {
-    
+    x++;
+    SetFlag(Z, x == 0x00);
+    SetFlag(N, x & 0x80);
+    return 0;
 }
 
+// INY - Increment Y by One
+//
+// The INY instruction increments the contents of the Y register by one.
+//
+// Flags affected:
+// Z - Set if the result is zero
+// N - Set if the result is negative
 uint8_t CPU::INY()
 {
-    
+    y++;
+    SetFlag(Z, y == 0x00);
+    SetFlag(N, y & 0x80);
+    return 0;
 }
 
+// DEC - Decrement Memory by One
+//
+// The DEC instruction decrements the contents of a memory location by
+// one.
+//
+// Flags affected:
+// Z - Set if the result is zero
+// N - Set if the result is negative
 uint8_t CPU::DEC()
 {
-    
+    uint8_t res = fetch()-1;
+    write(res, operandAddr);
+    SetFlag(Z, res == 0x00);
+    SetFlag(N, res & 0x80);
+    return 0;
 }
 
+// DEX - Decrement X by One
+//
+// The DEX instruction decrements the contents of the X register by one.
+//
+// Flags affected:
+// Z - Set if the result is zero
+// N - Set if the result is negative
 uint8_t CPU::DEX()
 {
-    
+    x--;
+    SetFlag(Z, x == 0x00);
+    SetFlag(N, x & 0x80);
+    return 0;
 }
 
+// DEY - Decrement Y by One
+//
+// The DEY instruction decrements the contents of the Y register by one.
+//
+// Flags affected:
+// Z - Set if the result is zero
+// N - Set if the result is negative
 uint8_t CPU::DEY()
 {
-    
+    y--;
+    SetFlag(Z, y == 0x00);
+    SetFlag(N, y & 0x80);
+    return 0;
 }
 
+// ASL - Arithmetic Shift Left
+//
+// The ASL instruction performs a one-bit left shift of a memory location or the accumulator.
+//
+// Flags affected:
+// C - Set if the most significant bit of the memory location or the accumulator before the shift
+// Z - Set if the result is zero
+// N - Set if the result is negative
 uint8_t CPU::ASL()
 {
-    
+    uint8_t memValue = fetch();
+    uint8_t res = memValue << 1;
+    SetFlag(C, memValue & 0x80);
+    if (implied)
+    {
+        a = res;
+        SetFlag(Z, a == 0x00);
+        SetFlag(N, a & 0x80);
+        implied = false;
+    }
+    else
+    {
+        write(res, operandAddr);
+        SetFlag(Z, res == 0x00);
+        SetFlag(N, res & 0x80);
+    }
+    return 0;
 }
 
+// LSR - Logical Shift Right
+//
+// The LSR instruction shifts all the bits in the operand to the right, with the bit that is shifted out becoming the new value of the carry flag.
+//
+// Flags affected:
+// C - Set to the value of the least significant bit before the shift
+// Z - Set if the result is zero
+// N - Set if the result is negative
 uint8_t CPU::LSR()
 {
-    
+    uint8_t memValue = fetch();
+    uint8_t res = memValue >> 1;
+    SetFlag(C, memValue & 0x01);
+    if (implied)
+    {
+        a = res;
+        SetFlag(Z, a == 0x00);
+        SetFlag(N, a & 0x80);
+        implied = false;
+    }
+    else
+    {
+        write(res, operandAddr);
+        SetFlag(Z, res == 0x00);
+        SetFlag(N, res & 0x80);
+    }
+    return 0;
 }
 
 uint8_t CPU::ROL()
 {
-    
+    uint8_t memValue = fetch();
+    uint8_t res = memValue >> 1;
+    SetFlag(C, memValue & 0x01);
+    if (implied)
+    {
+        a = res;
+        SetFlag(Z, a == 0x00);
+        SetFlag(N, a & 0x80);
+        implied = false;
+    }
+    else
+    {
+        write(res, operandAddr);
+        SetFlag(Z, res == 0x00);
+        SetFlag(N, res & 0x80);
+    }
+    return 0;
 }
 
 uint8_t CPU::ROR()
