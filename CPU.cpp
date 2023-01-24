@@ -4,13 +4,136 @@
 
 CPU::CPU()
 {
-
+	using a = CPU;
+	lookup =
+    {
+		{ "BRK", &a::BRK, &a::IMM, 7 }, { "ORA", &a::ORA, &a::IDX, 6 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 3 },{ "ORA", &a::ORA, &a::ZP0, 3 },{ "ASL", &a::ASL, &a::ZP0, 5 },{ "???", &a::XXX, &a::IMP, 5 },{ "PHP", &a::PHP, &a::IMP, 3 },{ "ORA", &a::ORA, &a::IMM, 2 },{ "ASL", &a::ASL, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::NOP, &a::IMP, 4 },{ "ORA", &a::ORA, &a::AB0, 4 },{ "ASL", &a::ASL, &a::AB0, 6 },{ "???", &a::XXX, &a::IMP, 6 },
+		{ "BPL", &a::BPL, &a::REL, 2 },{ "ORA", &a::ORA, &a::IDY, 5 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 4 },{ "ORA", &a::ORA, &a::ZPX, 4 },{ "ASL", &a::ASL, &a::ZPX, 6 },{ "???", &a::XXX, &a::IMP, 6 },{ "CLC", &a::CLC, &a::IMP, 2 },{ "ORA", &a::ORA, &a::ABY, 4 },{ "???", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 7 },{ "???", &a::NOP, &a::IMP, 4 },{ "ORA", &a::ORA, &a::ABX, 4 },{ "ASL", &a::ASL, &a::ABX, 7 },{ "???", &a::XXX, &a::IMP, 7 },
+		{ "JSR", &a::JSR, &a::AB0, 6 },{ "AND", &a::AND, &a::IDX, 6 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "BIT", &a::BIT, &a::ZP0, 3 },{ "AND", &a::AND, &a::ZP0, 3 },{ "ROL", &a::ROL, &a::ZP0, 5 },{ "???", &a::XXX, &a::IMP, 5 },{ "PLP", &a::PLP, &a::IMP, 4 },{ "AND", &a::AND, &a::IMM, 2 },{ "ROL", &a::ROL, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 2 },{ "BIT", &a::BIT, &a::AB0, 4 },{ "AND", &a::AND, &a::AB0, 4 },{ "ROL", &a::ROL, &a::AB0, 6 },{ "???", &a::XXX, &a::IMP, 6 },
+		{ "BMI", &a::BMI, &a::REL, 2 },{ "AND", &a::AND, &a::IDY, 5 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 4 },{ "AND", &a::AND, &a::ZPX, 4 },{ "ROL", &a::ROL, &a::ZPX, 6 },{ "???", &a::XXX, &a::IMP, 6 },{ "SEC", &a::SEC, &a::IMP, 2 },{ "AND", &a::AND, &a::ABY, 4 },{ "???", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 7 },{ "???", &a::NOP, &a::IMP, 4 },{ "AND", &a::AND, &a::ABX, 4 },{ "ROL", &a::ROL, &a::ABX, 7 },{ "???", &a::XXX, &a::IMP, 7 },
+		{ "RTI", &a::RTI, &a::IMP, 6 },{ "EOR", &a::EOR, &a::IDX, 6 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 3 },{ "EOR", &a::EOR, &a::ZP0, 3 },{ "LSR", &a::LSR, &a::ZP0, 5 },{ "???", &a::XXX, &a::IMP, 5 },{ "PHA", &a::PHA, &a::IMP, 3 },{ "EOR", &a::EOR, &a::IMM, 2 },{ "LSR", &a::LSR, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 2 },{ "JMP", &a::JMP, &a::AB0, 3 },{ "EOR", &a::EOR, &a::AB0, 4 },{ "LSR", &a::LSR, &a::AB0, 6 },{ "???", &a::XXX, &a::IMP, 6 },
+		{ "BVC", &a::BVC, &a::REL, 2 },{ "EOR", &a::EOR, &a::IDY, 5 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 4 },{ "EOR", &a::EOR, &a::ZPX, 4 },{ "LSR", &a::LSR, &a::ZPX, 6 },{ "???", &a::XXX, &a::IMP, 6 },{ "CLI", &a::CLI, &a::IMP, 2 },{ "EOR", &a::EOR, &a::ABY, 4 },{ "???", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 7 },{ "???", &a::NOP, &a::IMP, 4 },{ "EOR", &a::EOR, &a::ABX, 4 },{ "LSR", &a::LSR, &a::ABX, 7 },{ "???", &a::XXX, &a::IMP, 7 },
+		{ "RTS", &a::RTS, &a::IMP, 6 },{ "ADC", &a::ADC, &a::IDX, 6 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 3 },{ "ADC", &a::ADC, &a::ZP0, 3 },{ "ROR", &a::ROR, &a::ZP0, 5 },{ "???", &a::XXX, &a::IMP, 5 },{ "PLA", &a::PLA, &a::IMP, 4 },{ "ADC", &a::ADC, &a::IMM, 2 },{ "ROR", &a::ROR, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 2 },{ "JMP", &a::JMP, &a::IND, 5 },{ "ADC", &a::ADC, &a::AB0, 4 },{ "ROR", &a::ROR, &a::AB0, 6 },{ "???", &a::XXX, &a::IMP, 6 },
+		{ "BVS", &a::BVS, &a::REL, 2 },{ "ADC", &a::ADC, &a::IDY, 5 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 4 },{ "ADC", &a::ADC, &a::ZPX, 4 },{ "ROR", &a::ROR, &a::ZPX, 6 },{ "???", &a::XXX, &a::IMP, 6 },{ "SEI", &a::SEI, &a::IMP, 2 },{ "ADC", &a::ADC, &a::ABY, 4 },{ "???", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 7 },{ "???", &a::NOP, &a::IMP, 4 },{ "ADC", &a::ADC, &a::ABX, 4 },{ "ROR", &a::ROR, &a::ABX, 7 },{ "???", &a::XXX, &a::IMP, 7 },
+		{ "???", &a::NOP, &a::IMP, 2 },{ "STA", &a::STA, &a::IDX, 6 },{ "???", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 6 },{ "STY", &a::STY, &a::ZP0, 3 },{ "STA", &a::STA, &a::ZP0, 3 },{ "STX", &a::STX, &a::ZP0, 3 },{ "???", &a::XXX, &a::IMP, 3 },{ "DEY", &a::DEY, &a::IMP, 2 },{ "???", &a::NOP, &a::IMP, 2 },{ "TXA", &a::TXA, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 2 },{ "STY", &a::STY, &a::AB0, 4 },{ "STA", &a::STA, &a::AB0, 4 },{ "STX", &a::STX, &a::AB0, 4 },{ "???", &a::XXX, &a::IMP, 4 },
+		{ "BCC", &a::BCC, &a::REL, 2 },{ "STA", &a::STA, &a::IDY, 6 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 6 },{ "STY", &a::STY, &a::ZPX, 4 },{ "STA", &a::STA, &a::ZPX, 4 },{ "STX", &a::STX, &a::ZPY, 4 },{ "???", &a::XXX, &a::IMP, 4 },{ "TYA", &a::TYA, &a::IMP, 2 },{ "STA", &a::STA, &a::ABY, 5 },{ "TXS", &a::TXS, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 5 },{ "???", &a::NOP, &a::IMP, 5 },{ "STA", &a::STA, &a::ABX, 5 },{ "???", &a::XXX, &a::IMP, 5 },{ "???", &a::XXX, &a::IMP, 5 },
+		{ "LDY", &a::LDY, &a::IMM, 2 },{ "LDA", &a::LDA, &a::IDX, 6 },{ "LDX", &a::LDX, &a::IMM, 2 },{ "???", &a::XXX, &a::IMP, 6 },{ "LDY", &a::LDY, &a::ZP0, 3 },{ "LDA", &a::LDA, &a::ZP0, 3 },{ "LDX", &a::LDX, &a::ZP0, 3 },{ "???", &a::XXX, &a::IMP, 3 },{ "TAY", &a::TAY, &a::IMP, 2 },{ "LDA", &a::LDA, &a::IMM, 2 },{ "TAX", &a::TAX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 2 },{ "LDY", &a::LDY, &a::AB0, 4 },{ "LDA", &a::LDA, &a::AB0, 4 },{ "LDX", &a::LDX, &a::AB0, 4 },{ "???", &a::XXX, &a::IMP, 4 },
+		{ "BCS", &a::BCS, &a::REL, 2 },{ "LDA", &a::LDA, &a::IDY, 5 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 5 },{ "LDY", &a::LDY, &a::ZPX, 4 },{ "LDA", &a::LDA, &a::ZPX, 4 },{ "LDX", &a::LDX, &a::ZPY, 4 },{ "???", &a::XXX, &a::IMP, 4 },{ "CLV", &a::CLV, &a::IMP, 2 },{ "LDA", &a::LDA, &a::ABY, 4 },{ "TSX", &a::TSX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 4 },{ "LDY", &a::LDY, &a::ABX, 4 },{ "LDA", &a::LDA, &a::ABX, 4 },{ "LDX", &a::LDX, &a::ABY, 4 },{ "???", &a::XXX, &a::IMP, 4 },
+		{ "CPY", &a::CPY, &a::IMM, 2 },{ "CMP", &a::CMP, &a::IDX, 6 },{ "???", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "CPY", &a::CPY, &a::ZP0, 3 },{ "CMP", &a::CMP, &a::ZP0, 3 },{ "DEC", &a::DEC, &a::ZP0, 5 },{ "???", &a::XXX, &a::IMP, 5 },{ "INY", &a::INY, &a::IMP, 2 },{ "CMP", &a::CMP, &a::IMM, 2 },{ "DEX", &a::DEX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 2 },{ "CPY", &a::CPY, &a::AB0, 4 },{ "CMP", &a::CMP, &a::AB0, 4 },{ "DEC", &a::DEC, &a::AB0, 6 },{ "???", &a::XXX, &a::IMP, 6 },
+		{ "BNE", &a::BNE, &a::REL, 2 },{ "CMP", &a::CMP, &a::IDY, 5 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 4 },{ "CMP", &a::CMP, &a::ZPX, 4 },{ "DEC", &a::DEC, &a::ZPX, 6 },{ "???", &a::XXX, &a::IMP, 6 },{ "CLD", &a::CLD, &a::IMP, 2 },{ "CMP", &a::CMP, &a::ABY, 4 },{ "NOP", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 7 },{ "???", &a::NOP, &a::IMP, 4 },{ "CMP", &a::CMP, &a::ABX, 4 },{ "DEC", &a::DEC, &a::ABX, 7 },{ "???", &a::XXX, &a::IMP, 7 },
+		{ "CPX", &a::CPX, &a::IMM, 2 },{ "SBC", &a::SBC, &a::IDX, 6 },{ "???", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "CPX", &a::CPX, &a::ZP0, 3 },{ "SBC", &a::SBC, &a::ZP0, 3 },{ "INC", &a::INC, &a::ZP0, 5 },{ "???", &a::XXX, &a::IMP, 5 },{ "INX", &a::INX, &a::IMP, 2 },{ "SBC", &a::SBC, &a::IMM, 2 },{ "NOP", &a::NOP, &a::IMP, 2 },{ "???", &a::SBC, &a::IMP, 2 },{ "CPX", &a::CPX, &a::AB0, 4 },{ "SBC", &a::SBC, &a::AB0, 4 },{ "INC", &a::INC, &a::AB0, 6 },{ "???", &a::XXX, &a::IMP, 6 },
+		{ "BEQ", &a::BEQ, &a::REL, 2 },{ "SBC", &a::SBC, &a::IDY, 5 },{ "???", &a::XXX, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 8 },{ "???", &a::NOP, &a::IMP, 4 },{ "SBC", &a::SBC, &a::ZPX, 4 },{ "INC", &a::INC, &a::ZPX, 6 },{ "???", &a::XXX, &a::IMP, 6 },{ "SED", &a::SED, &a::IMP, 2 },{ "SBC", &a::SBC, &a::ABY, 4 },{ "NOP", &a::NOP, &a::IMP, 2 },{ "???", &a::XXX, &a::IMP, 7 },{ "???", &a::NOP, &a::IMP, 4 },{ "SBC", &a::SBC, &a::ABX, 4 },{ "INC", &a::INC, &a::ABX, 7 },{ "???", &a::XXX, &a::IMP, 7 },	
+    };
 }
 
 CPU::~CPU()
 {
     
 }
+
+
+void CPU::clock()
+{
+    
+}
+
+// RESET - Reset the CPU
+//
+// The RESET instruction is used to reset the CPU. It sets the program
+// counter to the address stored at fixed location 0xFFFC, and sets the
+// status register to 0x00 with the U flag set. The A, X, and Y registers
+// are set to 0, and the stack pointer is set to 0xFD.
+//
+// Flags affected:
+// B - cleared
+// I - cleared
+// U - set
+void CPU::reset()
+{
+    // Get address to set program counter to
+	operandAddr = 0xFFFC;
+	uint16_t lowAddr = read(operandAddr + 0);
+	uint16_t highAddr = read(operandAddr + 1);
+    pc = (highAddr << 8) | lowAddr;
+
+    a,x,y = 0;
+    status = 0x00 | U;
+    sp = 0xFD;
+
+    operandAddr = 0x0000;
+    relAddr = 0x0000;
+
+    cycles = 8;
+
+}
+
+// IRQ - Interrupt Request
+//
+// The IRQ instruction is used to request an interrupt. It pushes the program
+// counter and the status register onto the stack, and then sets the program
+// counter to the address stored at fixed location 0xFFFE. The I flag is set,
+// the B flag is cleared, and the U flag is set
+//
+// Flags affected:
+// B - cleared
+// I - set
+// U - set
+void CPU::IRQ()
+{
+    if (!GetFlag(I))
+    {
+        write((pc >> 8) & 0x00FF, 0x0100 + sp--);
+		write(pc & 0x00FF, 0x0100 + sp--);
+
+        SetFlag(B, 0);
+		SetFlag(U, 1);
+		SetFlag(I, 1);
+		write(status, 0x0100 + sp--);
+
+        // Read new program counter location from fixed address
+		operandAddr = 0xFFFE;
+		uint16_t lo = read(operandAddr + 0);
+		uint16_t hi = read(operandAddr + 1);
+		pc = (hi << 8) | lo;
+
+		cycles = 7;
+    }
+    
+}
+
+// NMI - Non-maskable Interrupt
+//
+// The NMI interrupt is triggered by a specific event, such as a button press,
+// that cannot be ignored by the processor. The NMI interrupt pushes the program
+// counter and status register onto the stack, sets the break flag, sets the
+// unused flag, sets the interrupt disable flag, and sets the program counter to
+// the memory location at 0xFFFA.
+//
+// Flags affected:
+// B - Set to 0
+// U - Set to 1
+// I - Set to 1
+void CPU::NMI()
+{
+    write((pc >> 8) & 0x00FF, 0x0100 + sp--);
+	write(pc & 0x00FF, 0x0100 + sp--);
+
+    SetFlag(B, 0);
+    SetFlag(U, 1);
+    SetFlag(I, 1);
+    write(status, 0x0100 + sp--);
+
+    // Read new program counter location from fixed address
+    operandAddr = 0xFFFA;
+    uint16_t lo = read(operandAddr + 0);
+    uint16_t hi = read(operandAddr + 1);
+    pc = (hi << 8) | lo;
+
+    cycles = 8;
+}
+
+
+
 
 uint8_t CPU::GetFlag(Flags f)
 {
@@ -88,6 +211,24 @@ uint8_t CPU::ABS(eIndexReg reg = CPU::eIndexReg::None)
     return 0;
 }
 
+//Non indexed Absolute addressing mode
+uint8_t CPU::AB0()
+{
+    return ABS();
+}
+
+//X indexed Absolute addressing mode
+uint8_t CPU::ABX()
+{
+    return ABS(CPU::eIndexReg::X);
+}
+
+//Y indexed Absolute addressing mode
+uint8_t CPU::ABY()
+{
+    return ABS(CPU::eIndexReg::Y);
+}
+
 // Zero Page Addressing mode - The operand is 8 bit offset in the zero page (0x00??).
 // The address will be kept in operandAddr var (no need to fetch after using this function)
 uint8_t CPU::ZPG(eIndexReg reg = CPU::eIndexReg::None)
@@ -95,6 +236,12 @@ uint8_t CPU::ZPG(eIndexReg reg = CPU::eIndexReg::None)
     uint8_t indexed = (reg = CPU::eIndexReg::X) ? x : (reg == CPU::eIndexReg::Y) ? y : 0;
     operandAddr = (read(pc++) + indexed) & 0x00FF;
     return 0;
+}
+
+//Non indexed Zero Page addressing mode
+uint8_t CPU::ZP0()
+{
+    return ZPG();
 }
 
 // Indirect Addressing mode - The operand is 16 bit address stored in address in the next two bytes.
@@ -120,9 +267,21 @@ uint8_t CPU::IND()
     return 0;
 }
 
+//X indexed Zero Page addressing mode
+uint8_t CPU::ZPX()
+{
+    return ZPG(CPU::eIndexReg::X);
+}
+
+//Y indexed Zero Page addressing mode
+uint8_t CPU::ZPY()
+{
+    return ZPG(CPU::eIndexReg::Y);
+}
+
 // Indexed Indirect Addressing mode - The operand is 16 bit address stored in address in the zeropage. the offset in the next byte + x register
 // The address will be kept in operandAddr var (no need to fetch after using this function)
-uint8_t CPU::INX()
+uint8_t CPU::IDX()
 {
     uint16_t pointer = read(pc++);
     uint16_t low =  read((pointer+(uint16_t)x) & 0x00FF);
@@ -133,7 +292,7 @@ uint8_t CPU::INX()
 
 // Indirect Indexed Addressing mode - The operand is 16 bit address stored in address in the zeropage. the offset in the next byte + y register
 // The address will be kept in operandAddr var (no need to fetch after using this function)
-uint8_t CPU::INY()
+uint8_t CPU::IDY()
 {
     uint16_t pointer = read(pc++);
     uint16_t low =  read(pointer & 0x00FF);
@@ -159,6 +318,17 @@ uint8_t CPU::fetch()
     return a; 
 }
 
+void CPU::branch()
+{
+    cycles++;
+    uint8_t page = pc & 0xFF00;
+    pc += relAddr;
+    if (page != pc & 0xFF00)
+    {
+        cycles++;
+    }
+    return;
+}
 
 // INSTRUCTIONS
 
@@ -254,19 +424,19 @@ uint8_t CPU::TXS()
 
 uint8_t CPU::PHA()
 {
-    write(a,0x0100 + sp--);
+    write(a,0x100 + sp--);
     return 0;
 }
 
 uint8_t CPU::PHP()
 {
-    write(status, sp--);
+    write(status,0x100 + sp--);
     return 0;
 }
 
 uint8_t CPU::PLA()
 {
-    a = read(sp++);
+    a = read(0x100 + sp++);
     SetFlag(Z, a == 0x00);
     SetFlag(N, a & 0x80);
     return 0;
@@ -274,7 +444,7 @@ uint8_t CPU::PLA()
 
 uint8_t CPU::PLP()
 {
-    status = read(sp++);
+    status = read(0x100 + sp++);
     return 0;
 }
 
@@ -381,6 +551,7 @@ uint8_t CPU::CMP()
     SetFlag(C, cmp >= 0x00);
     SetFlag(Z, cmp == 0x00);
     SetFlag(N, cmp & 0x80);
+    return 1;
 }
 
 // CPX - Compare Memory and X
@@ -564,153 +735,279 @@ uint8_t CPU::LSR()
     if (implied)
     {
         a = res;
-        SetFlag(Z, a == 0x00);
-        SetFlag(N, a & 0x80);
         implied = false;
     }
     else
-    {
         write(res, operandAddr);
-        SetFlag(Z, res == 0x00);
-        SetFlag(N, res & 0x80);
-    }
+
+    SetFlag(Z, res == 0x00);
+    SetFlag(N, res & 0x80);
     return 0;
 }
 
+// ROL - Rotate Left
+//
+// The ROL instruction shifts all the bits in a memory location or accumulator one place left.
+// The bit that was shifted out is replaced by the current carry flag.
+// The carry flag is set to the value of the bit that was shifted out.
+//
+// Flags affected:
+// C - Set to the value of the bit shifted out
+// Z - Set if the result is zero
+// N - Set if the result is negative
 uint8_t CPU::ROL()
 {
+    // fetching either the accumulator or a value at memory
     uint8_t memValue = fetch();
-    uint8_t res = memValue >> 1;
+    uint8_t res = memValue << 1;
+
+    // set the least significant bit to the current carry flag
+    res |= GetFlag(C);
+    SetFlag(C, memValue & 0x80);
+    if (implied)
+    {
+        a = res;
+        implied = false;
+    }
+    else
+        write(res, operandAddr);
+        
+    SetFlag(Z, res == 0x00);
+    SetFlag(N, res & 0x80);
+    return 0;
+}
+
+// ROR - Rotate Right
+//
+// The ROR instruction shifts all the bits right one time. The carry flag
+// is set to the value of the last bit shifted out of the operand. The
+// first bit shifted in is taken from the carry flag.
+//
+// Flags affected:
+// C - Set to the value of the last bit shifted out of the operand
+// Z - Set if the result is zero
+// N - Set if the result is negative
+uint8_t CPU::ROR()
+{
+    // fetching either the accumulator or a value at memory
+    uint8_t memValue = fetch();
+
+    // set the most significant bit to the current carry flag
+    uint8_t res = (GetFlag(C) << 7) | (memValue >> 1);
+
     SetFlag(C, memValue & 0x01);
     if (implied)
     {
         a = res;
-        SetFlag(Z, a == 0x00);
-        SetFlag(N, a & 0x80);
         implied = false;
     }
     else
-    {
         write(res, operandAddr);
-        SetFlag(Z, res == 0x00);
-        SetFlag(N, res & 0x80);
-    }
+        
+    SetFlag(Z, res == 0x00);
+    SetFlag(N, res & 0x80);
     return 0;
 }
 
-uint8_t CPU::ROR()
-{
-    
-}
-
+// JMP - Jump to new Location
+//
+// The JMP instruction sets the program counter to a new memory location.
+// This instruction can be used to change the flow of program execution
+// by jumping to a new location in memory.
+//
+// Flags affected: None
 uint8_t CPU::JMP()
 {
-    
+    pc = operandAddr;
+    return 0;
 }
 
+// JSR - Jump to Subroutine
+//
+// The JSR instruction pushes the address (minus one) of the return point on the stack
+// and then sets the program counter to the target memory address.
+// This allows the program to execute a subroutine at the target location and return to the instruction following JSR.
+//
+// Flags affected: None
 uint8_t CPU::JSR()
 {
-    
+    pc--;
+    write((pc>>8) & 0x00FF ,0x100 + sp--);
+    write(pc & 0x00FF ,0x100 + sp--);
+    pc = operandAddr;
+    return 0;
 }
 
+// RTS - Return from Subroutine
+//
+// The RTS instruction is used at the end of a subroutine to return to the
+// calling routine. The program counter (PC) is loaded with the contents
+// of the stack, effectively returning execution to the instruction
+// following the JSR instruction that began the subroutine.
+//
+// Flags affected: None
 uint8_t CPU::RTS()
 {
-    
+    uint8_t lowAddr = read(0x100 + sp++);
+    uint8_t highAddr = read(0x100 + sp++);
+    pc = (highAddr << 8) | lowAddr;
+    return 0;
 }
 
 uint8_t CPU::BCC()
 {
+    if (!GetFlag(C))
+    {
+        branch();
+    }
+    return 0;
     
 }
 
 uint8_t CPU::BCS()
 {
-    
+    if (GetFlag(C))
+    {
+        branch();
+    }
+    return 0;
 }
 
 uint8_t CPU::BEQ()
 {
-    
+    if (GetFlag(Z))
+    {
+        branch();
+    }
+    return 0;
 }
 
 uint8_t CPU::BMI()
 {
-    
+    if (GetFlag(N))
+    {
+        branch();
+    }
+    return 0;
 }
 
 uint8_t CPU::BNE()
 {
-    
+    if (!GetFlag(Z))
+    {
+        branch();
+    }
+    return 0;
 }
 
 uint8_t CPU::BPL()
 {
-    
+    if (!GetFlag(N))
+    {
+        branch();
+    }
+    return 0;
 }
 
 uint8_t CPU::BVC()
 {
-    
+    if (!GetFlag(V))
+    {
+        branch();
+    }
+    return 0;
 }
 
 uint8_t CPU::BVS()
 {
-    
+    if (GetFlag(V))
+    {
+        branch();
+    }
+    return 0;
 }
 
 uint8_t CPU::CLC()
 {
-    
+    SetFlag(C,false);
+    return 0;
 }
 
 uint8_t CPU::CLD()
 {
-    
+    SetFlag(D,false);
+    return 0;
 }
 
 uint8_t CPU::CLI()
 {
-    
+    SetFlag(I,false);
+    return 0;
 }
 
 uint8_t CPU::CLV()
 {
-    
+    SetFlag(V,false);
+    return 0;
 }
 
 uint8_t CPU::SEC()
 {
-    
+    SetFlag(C,true);
+    return 0;
 }
 
 uint8_t CPU::SED()
 {
-    
+    SetFlag(D,true);
+    return 0;
 }
 
 uint8_t CPU::SEI()
 {
-    
+    SetFlag(I,true);
+    return 0;
 }
 
 uint8_t CPU::NOP()
 {
-    
+    return 0;
 }
 
 uint8_t CPU::BRK()
 {
+    pc++;
+
+    SetFlag(I,true);
+    write((pc >> 8) & 0x00FF, 0x100 + sp--);
+    write(pc & 0x00FF, 0x100 + sp--);
+
+    SetFlag(B,true);
+    write(status, sp--);
+    SetFlag(B,false);
+
+    uint8_t lowAddr = read(0xFFFE);
+    uint8_t highAddr = read(0xFFFF);
+    pc = (highAddr << 8)| lowAddr;
     
+    return 0;
 }
 
 uint8_t CPU::RTI()
 {
+    status = read(0x100 + ++sp);
+    status &= ~B;
+	status &= ~U;
     
+    uint8_t lowAddr = read(0x100 + ++sp);
+    uint8_t highAddr = read(0x100 + ++sp);
+    pc = (highAddr << 8) | lowAddr;
+    return 0;
 }
 
 uint8_t CPU::XXX()
 {
-    
+    return 0;
 }
 
 
