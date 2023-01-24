@@ -6,7 +6,7 @@ class Bus
 {
 
 public:
-    Bus(/* args */);
+    Bus();
     ~Bus();
 
 public: 
