@@ -26,7 +26,7 @@ public:
         bus = b;
     }
 
-private:
+public:
 
     uint8_t a = 0x00; // Accumulator register
     uint8_t x = 0x00; // General purpose register X
@@ -54,6 +54,7 @@ private:
     uint8_t GetFlag(Flags f);
     void SetFlag(Flags f, bool state);
 
+private:
     uint8_t cycles = 0;
     uint8_t clockCount;
     uint16_t operandAddr;

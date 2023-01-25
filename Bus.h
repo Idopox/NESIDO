@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include "CPU.h"
 
 class Bus
@@ -13,7 +14,8 @@ public:
 
     CPU cpu;
 
-    uint8_t cpuRam[2048];
+    // uint8_t cpuRam[64*1024];
+    std::array<uint8_t, 64*1024> cpuRam;
 
 public: 
 

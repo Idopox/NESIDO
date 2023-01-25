@@ -231,7 +231,7 @@ uint8_t CPU::ABS(eIndexReg reg = CPU::eIndexReg::None)
 //Non indexed Absolute addressing mode
 uint8_t CPU::AB0()
 {
-    return ABS();
+    return ABS(CPU::eIndexReg::None);
 }
 
 //X indexed Absolute addressing mode
@@ -258,7 +258,7 @@ uint8_t CPU::ZPG(eIndexReg reg = CPU::eIndexReg::None)
 //Non indexed Zero Page addressing mode
 uint8_t CPU::ZP0()
 {
-    return ZPG();
+    return ZPG(CPU::eIndexReg::None);
 }
 
 // Indirect Addressing mode - The operand is 16 bit address stored in address in the next two bytes.
@@ -947,6 +947,7 @@ uint8_t CPU::BVS()
 uint8_t CPU::CLC()
 {
     SetFlag(C,false);
+    implied = false;
     return 0;
 }
 
@@ -958,6 +959,7 @@ uint8_t CPU::CLD()
 
 uint8_t CPU::CLI()
 {
+    // TODO implied=true in all instructions that use implied addressing mode
     SetFlag(I,false);
     return 0;
 }
