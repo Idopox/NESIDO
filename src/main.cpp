@@ -1,7 +1,7 @@
 #include <sstream>
 #include <iostream>
 #include <bitset>
-
+#include <SDL2/SDL.h>
 #include "CPU.h"
 #include "Bus.h"
 
@@ -45,9 +45,12 @@ void DrawCpu()
     std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
 }
 
+const int WIDTH = 800, HEIGHT = 600;
 int main(int argc, char const *argv[])
 {
-    
+    SDL_Init(SDL_INIT_EVERYTHING);
+    SDL_Window *window = SDL_CreateWindow("Hello SDL world", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_ALLOW_HIGHDPI);
+
     std::stringstream ss;
     ss << "A2 0A 8E 00 00 A2 03 8E 01 00 AC 00 00 A9 00 18 6D 01 00 88 D0 FA 8D 02 00 EA EA EA";
     uint16_t nOffset = 0x8000;
@@ -64,9 +67,17 @@ int main(int argc, char const *argv[])
 
     // Reset
     nes.cpu.reset();
-
+    SDL_Event windowEvent;
     while (true)
     {
+        if (SDL_PollEvent(&windowEvent))
+        {
+            if (SDL_QUIT == windowEvent.type)
+            {
+                break;
+            }
+        }
+        
         nes.cpu.clock();
         DrawCpu();
     }

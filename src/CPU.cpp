@@ -396,6 +396,7 @@ uint8_t CPU::TAX()
     x = a;
     SetFlag(Z, x == 0x00);
     SetFlag(N, x & 0x80);
+    implied = false;
     return 0;
 }
 
@@ -404,6 +405,7 @@ uint8_t CPU::TAY()
     y = a;
     SetFlag(Z, y == 0x00);
     SetFlag(N, y & 0x80);
+    implied = false;
     return 0;
 }
 
@@ -412,6 +414,7 @@ uint8_t CPU::TXA()
     a = x;
     SetFlag(Z, a == 0x00);
     SetFlag(N, a & 0x80);
+    implied = false;
     return 0;
 }
 
@@ -420,6 +423,7 @@ uint8_t CPU::TYA()
     a = y;
     SetFlag(Z, a == 0x00);
     SetFlag(N, a & 0x80);
+    implied = false;
     return 0;
 }
 
@@ -428,6 +432,7 @@ uint8_t CPU::TSX()
     x = sp;
     SetFlag(Z, x == 0x00);
     SetFlag(N, x & 0x80);
+    implied = false;
     return 0;
 }
 
@@ -436,18 +441,21 @@ uint8_t CPU::TXS()
     sp = x;
     SetFlag(Z, sp == 0x00);
     SetFlag(N, sp & 0x80);
+    implied = false;
     return 0;
 }
 
 uint8_t CPU::PHA()
 {
     write(a,0x100 + sp--);
+    implied = false;
     return 0;
 }
 
 uint8_t CPU::PHP()
 {
     write(status,0x100 + sp--);
+    implied = false;
     return 0;
 }
 
@@ -456,12 +464,14 @@ uint8_t CPU::PLA()
     a = read(0x100 + sp++);
     SetFlag(Z, a == 0x00);
     SetFlag(N, a & 0x80);
+    implied = false;
     return 0;
 }
 
 uint8_t CPU::PLP()
 {
     status = read(0x100 + sp++);
+    implied = false;
     return 0;
 }
 
@@ -642,6 +652,7 @@ uint8_t CPU::INX()
     x++;
     SetFlag(Z, x == 0x00);
     SetFlag(N, x & 0x80);
+    implied = false;
     return 0;
 }
 
@@ -657,6 +668,7 @@ uint8_t CPU::INY()
     y++;
     SetFlag(Z, y == 0x00);
     SetFlag(N, y & 0x80);
+    implied = false;
     return 0;
 }
 
@@ -689,6 +701,7 @@ uint8_t CPU::DEX()
     x--;
     SetFlag(Z, x == 0x00);
     SetFlag(N, x & 0x80);
+    implied = false;
     return 0;
 }
 
@@ -704,6 +717,7 @@ uint8_t CPU::DEY()
     y--;
     SetFlag(Z, y == 0x00);
     SetFlag(N, y & 0x80);
+    implied = false;
     return 0;
 }
 
@@ -868,6 +882,7 @@ uint8_t CPU::RTS()
     uint8_t lowAddr = read(0x100 + sp++);
     uint8_t highAddr = read(0x100 + sp++);
     pc = (highAddr << 8) | lowAddr;
+    implied = false;
     return 0;
 }
 
@@ -954,42 +969,48 @@ uint8_t CPU::CLC()
 uint8_t CPU::CLD()
 {
     SetFlag(D,false);
+    implied = false;
     return 0;
 }
 
 uint8_t CPU::CLI()
 {
-    // TODO implied=true in all instructions that use implied addressing mode
     SetFlag(I,false);
+    implied = false;
     return 0;
 }
 
 uint8_t CPU::CLV()
 {
     SetFlag(V,false);
+    implied = false;
     return 0;
 }
 
 uint8_t CPU::SEC()
 {
     SetFlag(C,true);
+    implied = false;
     return 0;
 }
 
 uint8_t CPU::SED()
 {
     SetFlag(D,true);
+    implied = false;
     return 0;
 }
 
 uint8_t CPU::SEI()
 {
     SetFlag(I,true);
+    implied = false;
     return 0;
 }
 
 uint8_t CPU::NOP()
 {
+    implied = false;
     return 0;
 }
 
@@ -1009,6 +1030,7 @@ uint8_t CPU::BRK()
     uint8_t highAddr = read(0xFFFF);
     pc = (highAddr << 8)| lowAddr;
     
+    implied = false;
     return 0;
 }
 
@@ -1021,6 +1043,7 @@ uint8_t CPU::RTI()
     uint8_t lowAddr = read(0x100 + ++sp);
     uint8_t highAddr = read(0x100 + ++sp);
     pc = (highAddr << 8) | lowAddr;
+    implied = false;
     return 0;
 }
 
