@@ -1052,6 +1052,12 @@ uint8_t CPU::XXX()
     return 0;
 }
 
+//a function used mainly for debugging
+bool CPU::complete()
+{
+	return cycles == 0;
+}
+
 
 
 

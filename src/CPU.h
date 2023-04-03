@@ -54,6 +54,7 @@ public:
     uint8_t GetFlag(Flags f);
     void SetFlag(Flags f, bool state);
 
+    bool complete();
 private:
     uint8_t cycles = 0;
     uint8_t clockCount;
