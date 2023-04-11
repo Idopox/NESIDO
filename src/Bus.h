@@ -5,6 +5,7 @@
 
 
 #include "CPU.h"
+#include "PPU.h"
 #include "Cartridge.h"
 
 class Bus
@@ -23,6 +24,8 @@ public:
 
     uint8_t cpuRam[2048];
 
+    uint32_t systemClockCounter = 0;
+
 public: 
 
     void cpuWrite(uint8_t data, uint16_t addr);
@@ -33,7 +36,5 @@ public:
     void reset();
     void insertCartridge(std::shared_ptr<Cartridge>& cartridge);
 
-private:
-    uint32_t systemClockCounter = 0;
 
 };
