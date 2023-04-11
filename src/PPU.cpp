@@ -11,7 +11,7 @@ PPU::~PPU()
     
 }
 
-uint8_t PPU::cpuRead(uint16_t addr, bool rdonly)
+uint8_t PPU::cpuRead(uint16_t addr)
 {
     uint8_t data = 0x00;
 
