@@ -34,6 +34,7 @@ CPU::~CPU()
 
 void CPU::clock()
 {
+    clockCount++;
     if (cycles == 0)
     {
         uint8_t opcode = read(pc++);
@@ -46,9 +47,9 @@ void CPU::clock()
         uint8_t add_cycle2 = (this->*lookup[opcode].operate)();
 
         cycles += add_cycle1 & add_cycle2;
-        
-        SetFlag(U,true);
 
+        SetFlag(U,true);
+        
     }
     cycles--;
     
@@ -72,9 +73,9 @@ void CPU::reset()
 	uint16_t lowAddr = read(operandAddr + 0);
 	uint16_t highAddr = read(operandAddr + 1);
     pc = (highAddr << 8) | lowAddr;
-
+    pc = 0xC000;
     a,x,y = 0;
-    status = 0x00 | U;
+    status = 0x00 | I | U;
     sp = 0xFD;
 
     operandAddr = 0x0000;
@@ -452,25 +453,41 @@ uint8_t CPU::PHA()
     return 0;
 }
 
+// PHP
+// Push Processor Status on Stack
+
+// The status register will be pushed with the break
+// flag and bit 5 set to 1.
 uint8_t CPU::PHP()
 {
-    write(status,0x100 + sp--);
+    write(status | B | U,0x100 + sp--);
+    SetFlag(B, 0);
+	SetFlag(U, 0);
     implied = false;
     return 0;
 }
 
 uint8_t CPU::PLA()
 {
-    a = read(0x100 + sp++);
+    a = read(0x100 + ++sp);
     SetFlag(Z, a == 0x00);
     SetFlag(N, a & 0x80);
     implied = false;
     return 0;
 }
 
+// PLP - Pull Processor Status
+//
+// The PLP instruction pulls a byte from the stack and sets the status register
+// to the value of that byte. Bits 4 and 5 of the status register are ignored.
+//
+// Flags affected:
+// All status flags are updated according to the value pulled from the stack,
 uint8_t CPU::PLP()
 {
-    status = read(0x100 + sp++);
+    uint8_t pulledStatus = read(0x100 + ++sp);
+    status = (pulledStatus & 0xEF) | (status & 0x10) | 0x20;
+
     implied = false;
     return 0;
 }
@@ -879,9 +896,10 @@ uint8_t CPU::JSR()
 // Flags affected: None
 uint8_t CPU::RTS()
 {
-    uint8_t lowAddr = read(0x100 + sp++);
-    uint8_t highAddr = read(0x100 + sp++);
+    uint8_t lowAddr = read(0x100 + ++sp);
+    uint8_t highAddr = read(0x100 + ++sp);
     pc = (highAddr << 8) | lowAddr;
+    pc++;
     implied = false;
     return 0;
 }
