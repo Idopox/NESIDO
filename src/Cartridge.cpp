@@ -77,6 +77,13 @@ Cartridge::Cartridge(const std::string &fileName)
 
 }
 
+Cartridge::~Cartridge()
+{
+    
+}
+
+
+
 void Cartridge::cpuRead(uint8_t &data, uint16_t addr)
 {
     uint32_t mapped_addr = 0;
