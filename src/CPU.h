@@ -55,9 +55,12 @@ public:
     void SetFlag(Flags f, bool state);
 
     bool complete();
+
+    uint8_t clockCount = 0;
+
+
 private:
     uint8_t cycles = 0;
-    uint8_t clockCount;
     uint16_t operandAddr;
     bool implied;
     uint16_t relAddr;
