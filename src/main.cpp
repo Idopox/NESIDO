@@ -1,11 +1,24 @@
 #include <sstream>
+#include <string>
 #include <iostream>
-#include <bitset>
+#include <cstdlib>
+#include <fstream>
+#include <iomanip>
+#include <windows.h>
+#define main SDL_main
 #include <SDL2/SDL.h>
 #include "CPU.h"
 #include "Bus.h"
 
+
+const int SCREEN_FPS = 60;
+const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
+
+
 Bus nes;
+std::shared_ptr<Cartridge> cart;
+
+
 
 std::string hex(uint32_t n, uint8_t d)
 {
@@ -45,42 +58,114 @@ void DrawCpu()
     std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
 }
 
-const int WIDTH = 800, HEIGHT = 600;
-int main(int argc, char const *argv[])
+void logDebug(uint16_t addr, uint8_t a, uint8_t x, uint8_t y, uint8_t p, uint8_t sp) {
+  static std::ofstream logFile;
+  if (!logFile.is_open()) {
+    logFile.open("debug.log", std::ios::out | std::ios::trunc);
+  }
+
+  logFile << std::hex << std::setw(4) << std::setfill('0') << std::uppercase << addr << " ";
+  logFile << "A:" << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << (int)a << " ";
+  logFile << "X:" << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << (int)x << " ";
+  logFile << "Y:" << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << (int)y << " ";
+  logFile << "P:" << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << (int)p << " ";
+  logFile << "SP:" << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << (int)sp << "\n";
+}
+
+const int WIDTH = 320, HEIGHT = 320;
+int main(int argc, char** argv)
 {
-    SDL_Init(SDL_INIT_EVERYTHING);
-    SDL_Window *window = SDL_CreateWindow("Hello SDL world", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_ALLOW_HIGHDPI);
-
-    std::stringstream ss;
-    ss << "A2 0A 8E 00 00 A2 03 8E 01 00 AC 00 00 A9 00 18 6D 01 00 88 D0 FA 8D 02 00 EA EA EA";
-    uint16_t nOffset = 0x8000;
-    while (!ss.eof())
+    putenv("SDL_VIDEODRIVER=windows");
+    if(SDL_Init(SDL_INIT_EVERYTHING)<0)    
     {
-        std::string b;
-        ss >> b;
-        nes.cpuRam[nOffset++] = (uint8_t)std::stoul(b, nullptr, 16);
+       std::cout<<"Endl Init Failed."<<std::endl;
+       return 1;    
     }
+   std::cout<<"SDL Init succeeded."<<std::endl;
 
-    // Set Reset Vector
-    nes.cpuRam[0xFFFC] = 0x00;
-    nes.cpuRam[0xFFFD] = 0x80;
+    // Check that the window was successfully created
+    SDL_Window *window = SDL_CreateWindow("aaaaa", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT,0);
+    if (window == NULL) {
+        // In the case that the window could not be made...
+        printf("Could not create window: %s\n", SDL_GetError());
+        return 1;
+    }
+       std::cout<<"SDL window succeeded."<<std::endl;
+    
+
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
+
+    cart = std::make_shared<Cartridge>("../nestest.nes");
+
+    nes.insertCartridge(cart);
 
     // Reset
-    nes.cpu.reset();
-    SDL_Event windowEvent;
-    while (true)
+     nes.cpu.reset();
+    SDL_Event event;
+    bool isRunning = true;
+    while (isRunning)
     {
-        if (SDL_PollEvent(&windowEvent))
+        uint32_t startTicks = SDL_GetTicks();
+
+        while(SDL_PollEvent(&event))
         {
-            if (SDL_QUIT == windowEvent.type)
+            if (event.type == SDL_QUIT)
             {
+                isRunning = false;
                 break;
             }
+
+            if (event.type == SDL_KEYDOWN)
+            {                
+                switch (event.key.keysym.sym)
+                    {
+                        case SDLK_ESCAPE:
+                            isRunning = false;
+                            break;
+                        case SDLK_SPACE:
+                            do
+                            {
+                                nes.cpu.clock();
+                            } while (!nes.cpu.complete());
+                            DrawCpu();
+                            break;
+                    }
+            }
+                    
+            
         }
-        
-        nes.cpu.clock();
-        DrawCpu();
+
+        if (nes.cpu.pc == 0xC825)
+        {
+            asm("nop");
+        }
+        do
+        {
+            nes.cpu.clock();
+
+            
+			//do { nes.clock(); } while (!nes.ppu.frame_complete);
+			//nes.ppu.frame_complete = false;
+        } while (!nes.cpu.complete());
+
+        logDebug(nes.cpu.pc,nes.cpu.a,nes.cpu.x, nes.cpu.y, nes.cpu.status,nes.cpu.sp);
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        // uint32_t frameTicks = SDL_GetTicks() - startTicks;
+        // if (frameTicks < SCREEN_TICKS_PER_FRAME) {
+        //     SDL_Delay(SCREEN_TICKS_PER_FRAME - frameTicks);
+        // }
+        if (nes.cpu.pc == 0xC66E)
+        {
+            break;
+        }
     }
+
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
     
 
 
