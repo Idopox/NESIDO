@@ -74,7 +74,7 @@ void CPU::reset()
 	uint16_t highAddr = read(operandAddr + 1);
     pc = (highAddr << 8) | lowAddr;
     pc = 0xC000;
-    a,x,y = 0;
+    a, x, y = 0;
     status = 0x00 | I | U;
     sp = 0xFD;
 
@@ -213,9 +213,9 @@ uint8_t CPU::ABS(eIndexReg reg = CPU::eIndexReg::None)
 {
     uint8_t lowAddr = read(pc++);
     uint8_t highAddr = read(pc++);
-    uint8_t indexed = (reg = CPU::eIndexReg::X) ? x : (reg == CPU::eIndexReg::Y) ? y : 0;
+    uint8_t indexed = (reg == CPU::eIndexReg::X) ? x : (reg == CPU::eIndexReg::Y) ? y : 0;
 
-    operandAddr = (highAddr << 8) | lowAddr + indexed;
+    operandAddr = ((highAddr << 8) | lowAddr) + indexed;
 
     if (reg != CPU::eIndexReg::None)
     {
@@ -251,7 +251,7 @@ uint8_t CPU::ABY()
 // The address will be kept in operandAddr var (no need to fetch after using this function)
 uint8_t CPU::ZPG(eIndexReg reg = CPU::eIndexReg::None)
 {
-    uint8_t indexed = (reg = CPU::eIndexReg::X) ? x : (reg == CPU::eIndexReg::Y) ? y : 0;
+    uint8_t indexed = (reg == CPU::eIndexReg::X) ? x : (reg == CPU::eIndexReg::Y) ? y : 0;
     operandAddr = (read(pc++) + indexed) & 0x00FF;
     return 0;
 }
@@ -341,7 +341,7 @@ void CPU::branch()
     cycles++;
     uint8_t page = pc & 0xFF00;
     pc += relAddr;
-    if (page != pc & 0xFF00)
+    if (page != (pc & 0xFF00))
     {
         cycles++;
     }
@@ -361,16 +361,16 @@ uint8_t CPU::LDA()
 uint8_t CPU::LDX()
 {
     x = fetch();
-    SetFlag(Z, a == 0x00);
-    SetFlag(N, a & 0x80);
+    SetFlag(Z, x == 0x00);
+    SetFlag(N, x & 0x80);
     return 1;
 }
 
 uint8_t CPU::LDY()
 {
     y = fetch();
-    SetFlag(Z, a == 0x00);
-    SetFlag(N, a & 0x80);
+    SetFlag(Z, y == 0x00);
+    SetFlag(N, y & 0x80);
     return 1;
 }
 
@@ -440,8 +440,6 @@ uint8_t CPU::TSX()
 uint8_t CPU::TXS()
 {
     sp = x;
-    SetFlag(Z, sp == 0x00);
-    SetFlag(N, sp & 0x80);
     implied = false;
     return 0;
 }
@@ -569,7 +567,7 @@ uint8_t CPU::SBC()
 {
     uint8_t mem = fetch();
     uint16_t result =  uint16_t(a) - (uint16_t)mem - uint16_t(1-GetFlag(C));
-    SetFlag(C, result > 0x00);
+    SetFlag(C, !(result & 0xFF00));
     SetFlag(V, (((a ^ mem) & 0x80) && ((a ^ result) & 0x80))); 
     a = 0x00FF & result;
     SetFlag(Z, a == 0x00);
@@ -592,7 +590,7 @@ uint8_t CPU::CMP()
 {
     uint8_t mem = fetch();
     uint8_t cmp = a - mem;
-    SetFlag(C, cmp >= 0x00);
+    SetFlag(C, a >= mem);
     SetFlag(Z, cmp == 0x00);
     SetFlag(N, cmp & 0x80);
     return 1;
@@ -613,7 +611,7 @@ uint8_t CPU::CPX()
 {
     uint8_t mem = fetch();
     uint8_t cmp = x - mem;
-    SetFlag(C, cmp >= 0x00);
+    SetFlag(C, x >= mem);
     SetFlag(Z, cmp == 0x00);
     SetFlag(N, cmp & 0x80);
     return 0;
@@ -634,7 +632,7 @@ uint8_t CPU::CPY()
 {
     uint8_t mem = fetch();
     uint8_t cmp = y - mem;
-    SetFlag(C, cmp >= 0x00);
+    SetFlag(C, y >= mem);
     SetFlag(Z, cmp == 0x00);
     SetFlag(N, cmp & 0x80);
     return 0;
