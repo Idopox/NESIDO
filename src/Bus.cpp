@@ -69,7 +69,6 @@ void Bus::clock()
 {
 
 	ppu.clock();
-
 	// The CPU runs 3 times slower than the PPU so we only call its
 	// clock() function every 3 times this function is called. We
 	// have a global counter to keep track of this.
@@ -77,6 +76,12 @@ void Bus::clock()
 	{
 		cpu.clock();
 	}
+    if (ppu.nmi)
+    {
+        ppu.nmi = false;
+        cpu.NMI();
+    }
+    
 
 	systemClockCounter++;
 }
