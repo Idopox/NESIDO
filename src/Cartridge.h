@@ -36,8 +36,8 @@ public:
     void cpuRead(uint8_t &data, uint16_t addr);
     void cpuWrite(uint8_t data, uint16_t addr);
 
-    void ppuRead(uint8_t &data, uint16_t addr);
-    void ppuWrite(uint8_t data, uint16_t addr);
+    bool ppuRead(uint8_t &data, uint16_t addr);
+    bool ppuWrite(uint8_t data, uint16_t addr);
 
 
 };

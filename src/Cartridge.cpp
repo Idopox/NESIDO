@@ -103,20 +103,24 @@ void Cartridge::cpuWrite(uint8_t data, uint16_t addr)
     }
 }
 
-void Cartridge::ppuRead(uint8_t &data, uint16_t addr)
+bool Cartridge::ppuRead(uint8_t &data, uint16_t addr)
 {
 	uint32_t mapped_addr = 0;
 	if (ptrMapper->ppuMapRead(addr, mapped_addr))
 	{
 		data = CHRMemory[mapped_addr];
+        return true;
 	}
+    return false;
 }
 
-void Cartridge::ppuWrite(uint8_t data, uint16_t addr)
+bool Cartridge::ppuWrite(uint8_t data, uint16_t addr)
 {
 	uint32_t mapped_addr = 0;
 	if (ptrMapper->ppuMapRead(addr, mapped_addr))
 	{
 		CHRMemory[mapped_addr] = data;
+        return true;
 	}
+    return false;
 }
