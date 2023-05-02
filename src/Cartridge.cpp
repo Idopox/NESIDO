@@ -61,7 +61,7 @@ Cartridge::Cartridge(const std::string &fileName)
         CHRMemory.resize(CHRBanks * 8192);
         file.read((char*)CHRMemory.data(), CHRMemory.size());
 
-        		// Load appropriate mapper
+        // Load appropriate mapper
 		switch (mapperID)
 		{
 		    case 0:
