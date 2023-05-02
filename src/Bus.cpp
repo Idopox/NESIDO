@@ -55,6 +55,7 @@ uint8_t Bus::cpuRead(uint16_t addr)
 void Bus::reset()
 {
     cpu.reset();
+    ppu.reset();
     systemClockCounter = 0;
     
 }
@@ -67,7 +68,7 @@ void Bus::insertCartridge(std::shared_ptr<Cartridge>& cartridge)
 
 void Bus::clock()
 {
-
+    
 	ppu.clock();
 	// The CPU runs 3 times slower than the PPU so we only call its
 	// clock() function every 3 times this function is called. We
