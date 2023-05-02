@@ -73,7 +73,6 @@ void CPU::reset()
 	uint16_t lowAddr = read(operandAddr + 0);
 	uint16_t highAddr = read(operandAddr + 1);
     pc = (highAddr << 8) | lowAddr;
-    pc = 0xC000;
     a, x, y = 0;
     status = 0x00 | I | U;
     sp = 0xFD;
