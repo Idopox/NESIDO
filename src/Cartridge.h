@@ -18,6 +18,8 @@ public:
     enum MIRRORING{
         VERTICAL,
         HORIZONTAL,
+        ONESCREEN_LO,
+        ONESCREEN_HI,
     } mirror = HORIZONTAL;
 
 private:
