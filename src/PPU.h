@@ -153,7 +153,7 @@ private:
 public:
 	// Communications with Main Bus
 	uint8_t cpuRead(uint16_t addr);
-	void    cpuWrite(uint16_t addr, uint8_t  data);
+	void    cpuWrite(uint8_t  data, uint16_t addr);
 
 	// Communications with PPU Bus
 	uint8_t ppuRead(uint16_t addr);
