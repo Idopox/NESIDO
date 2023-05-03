@@ -129,10 +129,10 @@ private:
 
         void update(uint8_t data) {
             if (addressLatch) {
-				tram_addr.reg = (tram_addr.reg & 0xFF00) | (uint16_t)(data);
+				tram_addr.reg = (tram_addr.reg & 0xFF00) | data;
 				vram_addr = tram_addr;
             } else {
-			    tram_addr.reg = (tram_addr.reg & 0x00FF) | ((uint16_t)(data) << 8);
+				tram_addr.reg = (uint16_t)((data & 0x3F) << 8) | (tram_addr.reg & 0x00FF);
             }
             addressLatch = !addressLatch;
         }

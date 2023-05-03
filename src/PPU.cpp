@@ -7,23 +7,22 @@ PPU::PPU()
     // The NES color palette in RGB format
 	uint32_t tempPalette[64] = {
 		// Grays
-		0x666666, 0x002A88, 0x1412A7, 0x3B00A4, 0x5C007E, 0x6E0040, 0x6C0600, 0x561D00,
+		0x666666FF, 0x002A88FF, 0x1412A7FF, 0x3B00A4FF, 0x5C007EFF, 0x6E0040FF, 0x6C0600FF, 0x561D00FF,
 		// Greens
-		0x333500, 0x0B4800, 0x005200, 0x004F08, 0x00404D, 0x000000, 0x000000, 0x000000,
+		0x333500FF, 0x0B4800FF, 0x005200FF, 0x004F08FF, 0x00404DFF, 0x000000FF, 0x000000FF, 0x000000FF,
 		// Blues
-		0xADADAD, 0x155FD9, 0x4240FF, 0x7527FA, 0xA01ACC, 0xB71E7B, 0xB53120, 0x994E00,
+		0xADADADFF, 0x155FD9FF, 0x4240FFFF, 0x7527FAFF, 0xA01ACCFF, 0xB71E7BFF, 0xB53120FF, 0x994E00FF,
 		// Yellows
-		0x6B6D00, 0x388700, 0x0C9300, 0x008F32, 0x007C8D, 0x000000, 0x000000, 0x000000,
+		0x6B6D00FF, 0x388700FF, 0x0C9300FF, 0x008F32FF, 0x007C8DFF, 0x000000FF, 0x000000FF, 0x000000FF,
 		// Light Grays
-		0xFFFEFF, 0x64B0FF, 0x9290FF, 0xC676FF, 0xF36AFF, 0xFE6ECC, 0xFE8170, 0xEA9E22,
+		0xFFFEFFFF, 0x64B0FFFF, 0x9290FFFF, 0xC676FFFF, 0xF36AFFFF, 0xFE6ECCFF, 0xFE8170FF, 0xEA9E22FF,
 		// Oranges
-		0xBCBE00, 0x88D800, 0x5CE430, 0x45E082, 0x48CDDE, 0x4F4F4F, 0x000000, 0x000000,
+		0xBCBE00FF, 0x88D800FF, 0x5CE430FF, 0x45E082FF, 0x48CDDEFF, 0x4F4F4FFF, 0x000000FF, 0x000000FF,
 		// Light Blues
-		0xFFFEFF, 0xC0DFFF, 0xD3D2FF, 0xE8C8FF, 0xFBC2FF, 0xFEC4EA, 0xFECCC5, 0xF7D8A5,
+		0xFFFEFFFF, 0xC0DFFFFF, 0xD3D2FFFF, 0xE8C8FFFF, 0xFBC2FFFF, 0xFEC4EAFF, 0xFECCC5FF, 0xF7D8A5FF,
 		// Light Greens
-		0xE4E594, 0xCFEF96, 0xBDF4AB, 0xB3FFCC, 0xB5EBF2, 0xB8B8B8, 0x000000, 0x000000
+		0xE4E594FF, 0xCFEF96FF, 0xBDF4ABFF, 0xB3FFCCFF, 0xB5EBF2FF, 0xB8B8B8FF, 0x000000FF, 0x000000FF
 	};
-
 	// Copy the temporary palette to the class member
     std::copy(std::begin(tempPalette), std::end(tempPalette), std::begin(nesPalette));
 }
@@ -65,7 +64,7 @@ uint8_t PPU::cpuRead(uint16_t addr)
 		data = ppuDataBuffer;
 		ppuDataBuffer = ppuRead(address.vram_addr.reg);
 
-		if (address.vram_addr.reg > 0x3F00) data = ppuDataBuffer;
+		if (address.vram_addr.reg >= 0x3F00) data = ppuDataBuffer;
 
 		address.increment(control.bits.vram_addr_increment());
 		break;
@@ -331,8 +330,9 @@ void PPU::clock()
 	{
 		bg_shifter_pattern_lo = (bg_shifter_pattern_lo & 0xFF00) | bg_next_tile_lsb;
 		bg_shifter_pattern_hi = (bg_shifter_pattern_hi & 0xFF00) | bg_next_tile_msb;
-		bg_shifter_att_lo = (bg_shifter_att_lo & 0xFF00) | ((bg_next_tile_att & 0b01) ? 0xFF : 0x00);
-		bg_shifter_att_hi = (bg_shifter_att_hi & 0xFF00) | ((bg_next_tile_att & 0b10) ? 0xFF : 0x00);
+		
+		bg_shifter_att_lo  = (bg_shifter_att_lo & 0xFF00) | ((bg_next_tile_att & 0b01) ? 0xFF : 0x00);
+		bg_shifter_att_hi  = (bg_shifter_att_hi & 0xFF00) | ((bg_next_tile_att & 0b10) ? 0xFF : 0x00);
 	};
 
 	auto UpdateShifters = [&]()
@@ -341,6 +341,9 @@ void PPU::clock()
 		{
 			bg_shifter_pattern_lo <<= 1;
 			bg_shifter_pattern_hi <<=1;
+
+			bg_shifter_att_lo <<= 1;
+			bg_shifter_att_hi <<= 1;
 		}
 	};
 
@@ -375,9 +378,10 @@ void PPU::clock()
 					break;
 				case 2:
 					// Fetch the next background tile attribute.
-					bg_next_tile_att = ppuRead(0x23C0 | (address.vram_addr.nametableY << 11) | (address.vram_addr.nametableX << 10)
-					| ((address.vram_addr.coarseY >> 2) << 3)
-					| (address.vram_addr.coarseX >> 2));
+					bg_next_tile_att = ppuRead(0x23C0 | (address.vram_addr.nametableY << 11) 
+					                                 | (address.vram_addr.nametableX << 10) 
+					                                 | ((address.vram_addr.coarseY >> 2) << 3) 
+					                                 | (address.vram_addr.coarseX >> 2));
 
 					if (address.vram_addr.coarseY & 0x02) bg_next_tile_att >>= 4;
 					if (address.vram_addr.coarseX & 0x02) bg_next_tile_att >>= 2;
@@ -403,7 +407,14 @@ void PPU::clock()
 
 		if (cycle == 257)
 		{
+			LoadBackgroundShifters();
 			TransferAddressX();
+		}
+
+		// Superfluous reads of tile id at end of scanline
+		if (cycle == 338 || cycle == 340)
+		{
+			bg_next_tile_id = ppuRead(0x2000 | (address.vram_addr.reg & 0x0FFF));
 		}
 
 		if (scanline == -1 && cycle >= 280 && cycle < 305)
@@ -444,7 +455,7 @@ void PPU::clock()
 		bgPixel = (p1Pixel << 1 ) | p0Pixel;
 
 		uint8_t bgPal0 = (bg_shifter_att_lo & bitMux) > 0;
-		uint8_t bgPal1 = (bg_shifter_att_lo & bitMux) > 0;
+		uint8_t bgPal1 = (bg_shifter_att_hi & bitMux) > 0;
 		bgPalette = (bgPal1 << 1 ) | bgPal0;
 	}
 

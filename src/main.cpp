@@ -50,7 +50,7 @@ SDL_Renderer* createRenderer(SDL_Window* window) {
 SDL_Texture* createFrameTexture(SDL_Renderer* renderer)
 {
     // Create the texture for the frame
-    SDL_Texture* frameTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, 256, 240);
+    SDL_Texture* frameTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 256, 240);
     if (frameTexture == nullptr) {
         std::cerr << "SDL_CreateTexture Error: " << SDL_GetError() << std::endl;
     }
