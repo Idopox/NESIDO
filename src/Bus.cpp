@@ -23,6 +23,12 @@ void Bus::cpuWrite(uint8_t data, uint16_t addr)
         addr &= 0x0007;
         ppu.cpuWrite(data, addr);
     }
+    else if (addr == 0x4014)
+    {
+        dmaPage = data;
+        dmaOffset = 0x00;
+        isDMA = true;
+    }
     else if (addr >= 0x4020 && addr <= 0xFFFF)
     {
         cart->cpuWrite(data,addr);
@@ -57,6 +63,12 @@ void Bus::reset()
     cpu.reset();
     ppu.reset();
     systemClockCounter = 0;
+
+    dmaPage = 0x00;
+    dmaOffset = 0x00;
+    dmaData = 0x00;
+    isDMA = false;
+    isDMASync = false;
     
 }
 
@@ -75,8 +87,38 @@ void Bus::clock()
 	// have a global counter to keep track of this.
 	if (systemClockCounter % 3 == 0)
 	{
-		cpu.clock();
-	}
+        if (isDMA)
+        {
+            if (isDMASync)
+            {
+                if (systemClockCounter % 2 == 0)
+                {
+                    dmaData = cpuRead((dmaPage << 8) | dmaOffset);
+                }
+                else
+                {
+                    ppu.ptrOAM[dmaOffset] = dmaData;
+                    dmaOffset++;
+                    if (dmaOffset == 0x00)
+                    {
+                        isDMA = false;
+                        isDMASync = false;
+                    }
+                }
+            }
+            else
+            {
+                if (systemClockCounter % 2 == 1)
+                {
+                    isDMASync = true;
+                }
+            }
+        }
+        else
+        {
+		    cpu.clock();
+        }
+    }
     if (ppu.nmi)
     {
         ppu.nmi = false;

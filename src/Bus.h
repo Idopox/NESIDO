@@ -24,7 +24,6 @@ public:
 
     uint8_t cpuRam[2048];
 
-    uint32_t systemClockCounter = 0;
 
 public: 
 
@@ -35,6 +34,19 @@ public:
     void clock();
     void reset();
     void insertCartridge(std::shared_ptr<Cartridge>& cartridge);
+
+private:
+    uint32_t systemClockCounter = 0;
+    
+
+    //DMA
+    uint8_t dmaPage = 0x00;
+    uint8_t dmaOffset = 0x00;
+    uint8_t dmaData = 0x00;
+
+    bool isDMA = false;
+    bool isDMASync = false;
+
 
 
 };

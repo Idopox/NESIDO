@@ -148,9 +148,38 @@ private:
     } address;
 	
 	uint8_t ppuDataBuffer = 0x00;	
-	
+
+
+	struct objectAtt
+	{
+
+		uint8_t y;
+		uint8_t id;
+		uint8_t att;
+		uint8_t x;
+
+	} OAM[64];
+
+	uint8_t oamAddr = 0x00;
+
+	objectAtt spritesCurrentScanline[8];
+	uint8_t spritesCount;
+	uint8_t sprite_shifter_pattern_lo[8];
+	uint8_t sprite_shifter_pattern_hi[8];
+
+	bool sprite0hit = false;
+	bool sprite0rendered = false;
+
 
 public:
+
+	uint8_t* ptrOAM = (uint8_t*)OAM;
+
+	
+
+
+
+
 	// Communications with Main Bus
 	uint8_t cpuRead(uint16_t addr);
 	void    cpuWrite(uint8_t  data, uint16_t addr);
