@@ -11,6 +11,12 @@ Bus::~Bus()
     
 }
 
+void Bus::writeController(uint8_t idx, uint8_t value) {
+    if (idx < 2) {
+        controller[idx] = value;
+    }
+}
+
 void Bus::cpuWrite(uint8_t data, uint16_t addr)
 {
     if (addr >= 0x0000 && addr <= 0x1FFF)
@@ -28,6 +34,10 @@ void Bus::cpuWrite(uint8_t data, uint16_t addr)
         dmaPage = data;
         dmaOffset = 0x00;
         isDMA = true;
+    }
+    else if (addr >= 0x4016 && addr <= 0x4017)
+    {
+        controllerStatus[addr & 0x0001] = controller[addr & 0x0001];
     }
     else if (addr >= 0x4020 && addr <= 0xFFFF)
     {
@@ -49,6 +59,11 @@ uint8_t Bus::cpuRead(uint16_t addr)
     {
         addr &= 0x0007;
         data = ppu.cpuRead(addr);
+    }
+    else if (addr >= 0x4016 && addr <= 0x4017)
+    {
+        data = (controllerStatus[addr & 0x0001] & 0x80) > 0;
+		controllerStatus[addr & 0x0001] <<= 1;
     }
     else if (addr >= 0x4020 && addr <= 0xFFFF)
     {

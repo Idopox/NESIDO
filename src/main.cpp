@@ -14,6 +14,14 @@
 const int SCREEN_FPS = 60;
 const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
 
+const uint8_t BUTTONA = 0x80;
+const uint8_t BUTTTONB = 0x40;
+const uint8_t SELECT = 0x20;
+const uint8_t START = 0x10;
+const uint8_t UP = 0x08;
+const uint8_t DOWN = 0x04;
+const uint8_t LEFT = 0x02;
+const uint8_t RIGHT = 0x01;
 
 bool initSDL() {
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
@@ -97,7 +105,7 @@ int main(int argc, char** argv)
     SDL_Texture* frameTexture = createFrameTexture(renderer);
     if (frameTexture == nullptr) return 1;
 
-    cart = std::make_shared<Cartridge>("../Donkey Kong.nes");
+    cart = std::make_shared<Cartridge>("../roms/Pac-Man.nes");
 
     nes.insertCartridge(cart);
 
@@ -111,6 +119,7 @@ int main(int argc, char** argv)
 
         while(SDL_PollEvent(&event))
         {
+            
             if (event.type == SDL_QUIT)
             {
                 isRunning = false;
@@ -124,13 +133,24 @@ int main(int argc, char** argv)
                         case SDLK_ESCAPE:
                             isRunning = false;
                             break;
-                        case SDLK_SPACE:
-                            break;
                     }
             }
-                    
-            
         }
+
+        const Uint8* keyState = SDL_GetKeyboardState(NULL);
+
+        uint8_t controllerState = 0;
+        controllerState |= keyState[SDL_SCANCODE_X] ? BUTTONA : 0x00; // A Button
+        controllerState |= keyState[SDL_SCANCODE_Z] ? BUTTTONB : 0x00; // B Button
+        controllerState |= keyState[SDL_SCANCODE_A] ? SELECT : 0x00; // Select
+        controllerState |= keyState[SDL_SCANCODE_S] ? START : 0x00; // Start
+        controllerState |= keyState[SDL_SCANCODE_UP] ? UP : 0x00;
+        controllerState |= keyState[SDL_SCANCODE_DOWN] ? DOWN : 0x00;
+        controllerState |= keyState[SDL_SCANCODE_LEFT] ? LEFT : 0x00;
+        controllerState |= keyState[SDL_SCANCODE_RIGHT] ? RIGHT : 0x00;
+
+        nes.writeController(0, controllerState);
+        nes.writeController(1, controllerState);
 
         do 
         {
