@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
+#include <filesystem>
 #include <windows.h>
 #define main SDL_main
 #include <SDL2/SDL.h>
@@ -11,7 +12,7 @@
 #include "Bus.h"
 
 
-const int SCREEN_FPS = 60;
+const int SCREEN_FPS = 144;
 const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
 
 const uint8_t BUTTONA = 0x80;
@@ -24,7 +25,9 @@ const uint8_t LEFT = 0x02;
 const uint8_t RIGHT = 0x01;
 
 bool initSDL() {
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+
+    putenv("SDL_VIDEODRIVER=windows");
+    if (SDL_Init(SDL_INIT_EVERYTHING) > 0) {
         std::cout << "SDL Init Failed." << std::endl;
         return false;
     }
@@ -33,7 +36,7 @@ bool initSDL() {
 }
 
 SDL_Window* createWindow() {
-    SDL_Window* window = SDL_CreateWindow("NES Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 256 * 2, 240 * 2, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("NESIDO", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 256 * 2, 240 * 2, SDL_WINDOW_SHOWN);
     if (window == nullptr) {
         std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -92,6 +95,21 @@ std::shared_ptr<Cartridge> cart;
 const int WIDTH = 256, HEIGHT = 240;
 int main(int argc, char** argv)
 {
+    if (argc != 2)
+    {
+        std::cout << "Invalid arguments amount" << std::endl;
+        return 1;
+    }
+
+    std::string game_name(argv[1]);
+    std::filesystem::path roms_directory("../roms");
+    std::filesystem::path game_path = roms_directory / game_name;
+
+    if (!(std::filesystem::exists(game_path))) {
+        std::cout << "The game \"" << game_name << "\" does not exist in the roms directory." << std::endl;
+        return 1;
+    }
+    
     if (!initSDL()) return 1;
 
     SDL_Window* window = createWindow();
@@ -105,7 +123,7 @@ int main(int argc, char** argv)
     SDL_Texture* frameTexture = createFrameTexture(renderer);
     if (frameTexture == nullptr) return 1;
 
-    cart = std::make_shared<Cartridge>("../roms/Pac-Man.nes");
+    cart = std::make_shared<Cartridge>("../roms/" + std::string(argv[1]));
 
     nes.insertCartridge(cart);
 
