@@ -1,7 +1,7 @@
 CPP_SOURCES = $(wildcard Emulator/src/*.cpp)
 OBJ = $(addprefix Emulator/build/obj/, $(notdir ${CPP_SOURCES:.cpp=.o}))
 
-all: build/nesido.exe
+all: Emulator/build/nesido.exe
 
 Emulator/build/nesido.exe: $(OBJ)
 	g++ -std=c++17 -I Emulator/src/SDL2/include -L Emulator/src/SDL2/lib -o Emulator/build/nesido $^ -lmingw32 -lSDL2main -lSDL2
