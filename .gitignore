@@ -350,6 +350,10 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+venv/
+Emulator/src/SDL2/*/
+
+
 *.pdf
 *.nes
 *.docx
