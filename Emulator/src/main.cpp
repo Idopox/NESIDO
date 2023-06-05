@@ -12,7 +12,7 @@
 #include "Bus.h"
 
 
-const int SCREEN_FPS = 144;
+const int SCREEN_FPS = 60;
 const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
 
 const uint8_t BUTTONA = 0x80;
@@ -106,8 +106,11 @@ int main(int argc, char** argv)
     std::filesystem::path game_path = roms_directory / game_name;
 
     if (!(std::filesystem::exists(game_path))) {
-        std::cout << "The game \"" << game_name << "\" does not exist in the roms directory." << std::endl;
-        return 1;
+        std::filesystem::path game_path = game_name;
+        if (!(std::filesystem::exists(game_path))) {
+            std::cout << "The game \"" << game_name << "\" does not exist in the roms directory." << std::endl;
+            return 1;
+        }
     }
     
     if (!initSDL()) return 1;
@@ -122,8 +125,8 @@ int main(int argc, char** argv)
 
     SDL_Texture* frameTexture = createFrameTexture(renderer);
     if (frameTexture == nullptr) return 1;
-
-    cart = std::make_shared<Cartridge>("../roms/" + std::string(argv[1]));
+    std::cout << game_path.generic_string() << std::endl;
+    cart = std::make_shared<Cartridge>(game_path.generic_string());
 
     nes.insertCartridge(cart);
 
