@@ -35,8 +35,6 @@ class Client:
         try:
             print("start DH")
             G = int(sr.recv_by_size(self.sock).decode())
-            print("after")
-            print(G)
             P = int(sr.recv_by_size(self.sock).decode())
 
             Secret = pow(G,B,P)
@@ -94,7 +92,7 @@ class Client:
 
         response = self._receive_decrypted().decode("utf-8")
         if response == "RGSTS~":
-            messagebox.showinfo('Registration result', 'Registration successful')
+            messagebox.showinfo('Registration result', 'Registration successful, Please Login')
         elif response == "RGSTF~":
             messagebox.showinfo('Registration result', 'Registration failed')
 
@@ -106,6 +104,8 @@ class Client:
         self.game_listbox.grid(row=0, column=0)
         play_button = tk.Button(self.root, text="Play", command=self._play_game)
         play_button.grid(row=1, column=0)
+        close_button = tk.Button(self.root, text="Close", command=self._close)
+        close_button.grid(row=1, column=1)
 
         # Request the list of games from the server
         self._send_encrypted("SGAME~")
@@ -124,7 +124,9 @@ class Client:
         print(f"Starting game: {selected_game}")
         # Starting the game
         rom_path = self._get_rom(selected_game)
-        
+        if not rom_path:
+             messagebox.showinfo('Error', 'Server could not send the game')
+             return
         # Set up the environment variables for the subprocess
         env = os.environ.copy()
         env["SDL_VIDEODRIVER"] = "windows"
@@ -150,6 +152,9 @@ class Client:
 
         file_size = int(file_size_message[6:])
         path = "Emulator/tmpRoms/"
+        if (not os.path.isdir(path)):
+            os.mkdir(path)
+        
         # Prepare to receive the file
         with open(path + selected_game + '.gz', 'wb') as f:
             bytes_received = 0
@@ -169,7 +174,7 @@ class Client:
         with gzip.open(path + selected_game + '.gz', 'rb') as f_in:
             with open(path + selected_game + '.nes', 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
-            os.remove(path + selected_game + '.gz')
+        os.remove(path + selected_game + '.gz')
         return path + selected_game + '.nes'
         
 
@@ -179,7 +184,9 @@ class Client:
         ct_bytes = cipher.encrypt(pad(message.encode('utf-8'), AES.block_size))
         iv = cipher.iv
         ct = base64.b64encode(iv + ct_bytes).decode('utf-8')
-        sr.send_with_size(ct.encode('utf-8'))
+        sr.send_with_size(self.sock, ct.encode('utf-8'))
+        print ("\nSent(%s)>>>" % (len(message),), end='')
+        print ("%s"%(message[:min(len(message),100)],))
 
     def _receive_decrypted(self):
         try:
@@ -198,6 +205,8 @@ class Client:
             ct = iv_ct[16:]
             cipher = AES.new(self.key, AES.MODE_CBC, iv=iv)
             decrypted_message = unpad(cipher.decrypt(ct), AES.block_size)
+            print ("\nRecv(%s)>>>" % (decrypted_message[:6],), end='')
+            print ("%s"%(decrypted_message[:min(len(decrypted_message),100)],))
 
             return decrypted_message
         except Exception as e:
@@ -206,6 +215,17 @@ class Client:
 
     def main(self):
         self.root.mainloop()
+    
+    def _close(self):
+        self._send_encrypted("CLOSE~")
+        games = os.listdir("Emulator/tmpRoms")
+        for game in games:
+            os.remove("Emulator/tmpRoms/" + game)
+        os.rmdir("Emulator/tmpRoms")
+        self.sock.close()
+        self.root.destroy()
+        exit()
+        
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="NESIDO Emulator Server")
@@ -215,3 +235,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     Client((args.host, args.port)).main()
+    
