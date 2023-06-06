@@ -26,7 +26,7 @@ class Client:
             exit(1)
 
         self.root = tk.Tk()
-        self.root.title("NES Emulator")
+        self.root.title("NESIDO Emulator Client")
         self._create_shared_key()
         self._build_login_screen()
 
