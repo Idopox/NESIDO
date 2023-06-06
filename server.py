@@ -6,7 +6,7 @@ import sqlite3
 import os
 import socket
 import sys
-from threading import Thread
+from threading import Thread, Lock
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from utils import tcp_by_size as sr
@@ -14,40 +14,52 @@ import base64
 import secrets
 import time
 
+db_lock = Lock()
+
 class UserDatabase:
     def __init__(self, db_path='users.db'):
-        self.db = sqlite3.connect(db_path)
-        self.cursor = self.db.cursor()
-        self.cursor.execute(
-            'CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY, password TEXT, salt TEXT)')
+        self.db_path = db_path
+        with db_lock:
+            db = sqlite3.connect(db_path)
+            cursor = db.cursor()
+            cursor.execute(
+                'CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY, password TEXT, salt TEXT)')
+            db.commit()
+            db.close()
 
     def register_user(self, username, password):
-        try:
-            salt = secrets.token_bytes(16)  # create a new salt for this user
-            hashed_password = hashlib.sha256((password.encode() + salt)).hexdigest()
-            self.cursor.execute(
-                'INSERT INTO users VALUES (?, ?, ?)', (username, hashed_password, salt.hex()))
-            self.db.commit()
-            return True
-        except sqlite3.IntegrityError:
-            # This exception will be raised if the username is already taken
-            return False
+        with db_lock:
+            db = sqlite3.connect(self.db_path)
+            cursor = db.cursor()
+            try:
+                salt = secrets.token_bytes(16)  # create a new salt for this user
+                hashed_password = hashlib.sha256((password.encode() + salt)).hexdigest()
+                cursor.execute(
+                    'INSERT INTO users VALUES (?, ?, ?)', (username, hashed_password, salt.hex()))
+                db.commit()
+                return True
+            except sqlite3.IntegrityError:
+                # This exception will be raised if the username is already taken
+                return False
+            finally:
+                db.close()
 
     def login_user(self, username, password):
-        self.cursor.execute(
-            'SELECT * FROM users WHERE username=?', (username,))
-        user = self.cursor.fetchone()
+        with db_lock:
+            db = sqlite3.connect(self.db_path)
+            cursor = db.cursor()
+            cursor.execute(
+                'SELECT * FROM users WHERE username=?', (username,))
+            user = cursor.fetchone()
+            db.close()
 
-        if user is None:
-            return False  # user not found
+            if user is None:
+                return False  # user not found
 
-        salt = bytes.fromhex(user[2])  # get the salt
-        hashed_password = hashlib.sha256((password.encode() + salt)).hexdigest()
+            salt = bytes.fromhex(user[2])  # get the salt
+            hashed_password = hashlib.sha256((password.encode() + salt)).hexdigest()
 
-        return user[1] == hashed_password  # check the password
-
-    def close(self):
-        self.db.close()
+            return user[1] == hashed_password  # check the password
 
 
 class Server:
@@ -58,6 +70,7 @@ class Server:
         self.clients = []
         self.db = UserDatabase()
         self.roms_path = roms_path
+        self.running = True
 
     def start(self):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -66,20 +79,25 @@ class Server:
 
         print(f"Server started, listening on {self.host}:{self.port}")
 
-        while True:
-            client_sock, addr = self.server.accept()
-            print(f"New client connected from {addr}")
+        while self.running:
+            try:
+                client_sock, addr = self.server.accept()
+                print(f"New client connected from {addr}")
 
-            client_thread = Thread(target=self.handle_client, args=(client_sock,))
-            client_thread.start()
+                client_thread = Thread(target=self.handle_client, args=(client_sock,))
+                client_thread.start()
 
-            self.clients.append((client_sock, addr))
+                self.clients.append((client_sock, addr))
+            except socket.timeout:
+                continue
+            except Exception as e:
+                print(f"An error occurred: {e}")
 
     def stop(self):
+        self.running = False
         for client_sock, _ in self.clients:
             client_sock.close()
         self.server.close()
-        self.db.close()
 
     def handle_client(self, client_sock):
         G = 5
@@ -92,16 +110,9 @@ class Server:
         sr.send_with_size(client_sock,str(x).encode())
         y = int(sr.recv_by_size(client_sock).decode())
         key = hashlib.sha256(str(pow(y,A,P)).encode()).digest()
-
         while True:
             try:
-                encrypted_data = sr.recv_by_size(client_sock)
-                iv_ct = base64.b64decode(encrypted_data)
-                iv = iv_ct[:16]
-                ct = iv_ct[16:]
-                cipher = AES.new(key, AES.MODE_CBC, iv=iv)
-                decrypted_message = unpad(cipher.decrypt(ct), AES.block_size).decode('utf-8')
-
+                decrypted_message = self._receive_decrypted(client_sock,key)
                 command = decrypted_message.split("~")[0]
                 if command == "LOGIN":
                     username = decrypted_message.split("~")[1]
@@ -131,8 +142,9 @@ class Server:
                     self._send_encrypted(client_sock,key,ret_message)
 
                 elif command == "RQGME":
-                    game_name = decrypted_message.split("~")[1]
+                    game_name = decrypted_message.split("~")[1] + '.nes'
                     game_file_path = os.path.join(self.roms_path, game_name)
+                    print(game_file_path)
                     if os.path.isfile(game_file_path):
                         # Compress the file first
                         try:
@@ -168,23 +180,48 @@ class Server:
                         os.remove(game_file_path)  # remove the compressed game file
                     else:
                         self._send_encrypted(client_sock, key, "RQGMF~")  # game not found
+                elif command == "CLOSE":
+                    client_sock.close()
+                    return
 
             except Exception as e:
                 print(f"An error occurred while handling a client: {e}")
                 client_sock.close()
                 break
         
-
     def _send_encrypted(self, client_sock, key, message):
         cipher = AES.new(key, AES.MODE_CBC)
-        ct_bytes = cipher.encrypt(pad(message.encode('utf-8'), AES.block_size))
+        if isinstance(message, str):
+            message = message.encode('utf-8')
+        ct_bytes = cipher.encrypt(pad(message, AES.block_size))
         iv = cipher.iv
         ct = base64.b64encode(iv + ct_bytes).decode('utf-8')
         sr.send_with_size(client_sock, ct.encode('utf-8'))
+        print ("\nSent(%s)>>>" % (len(message),), end='')
+        print ("%s"%(message[:min(len(message),100)],))
+
+    def _receive_decrypted(self, client_sock, key):
+        encrypted_data = sr.recv_by_size(client_sock)
+        iv_ct = base64.b64decode(encrypted_data)
+        iv = iv_ct[:16]
+        ct = iv_ct[16:]
+        cipher = AES.new(key, AES.MODE_CBC, iv=iv)
+        decrypted_message = unpad(cipher.decrypt(ct), AES.block_size).decode('utf-8')
+        print ("\nRecv(%s)>>>" % (decrypted_message[:6],), end='')
+        print ("%s"%(decrypted_message[:min(len(decrypted_message),100)],))
+        return decrypted_message
+        
+
+def stop_server(server):
+    while True:
+        command = input()
+        if command == "stop":
+            server.stop()
+            break
 
 def main():
     parser = argparse.ArgumentParser(description="NESIDO Emulator Server")
-    parser.add_argument('--roms_path', default='/roms')
+    parser.add_argument('--roms_path', default='roms')
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=12345)
 
@@ -192,9 +229,15 @@ def main():
 
     server = Server(args.roms_path, args.host, args.port)
     try:
+        stop_thread = Thread(target=stop_server, args=(server,))
+        stop_thread.start()
+
         server.start()
     except KeyboardInterrupt:
         print("\nStopping server...")
+        server.stop()
+    except Exception as e:
+        print(f"An error occurred: {e}")
         server.stop()
 
 if __name__ == "__main__":
