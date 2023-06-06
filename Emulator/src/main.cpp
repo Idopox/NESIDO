@@ -101,17 +101,17 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    std::string game_name(argv[1]);
-    std::filesystem::path roms_directory("../roms");
-    std::filesystem::path game_path = roms_directory / game_name;
+    std::string sgame_path(argv[1]);
+    //std::filesystem::path roms_directory("../roms");
+    std::filesystem::path game_path = sgame_path;
 
-    if (!(std::filesystem::exists(game_path))) {
-        std::filesystem::path game_path = game_name;
-        if (!(std::filesystem::exists(game_path))) {
-            std::cout << "The game \"" << game_name << "\" does not exist in the roms directory." << std::endl;
-            return 1;
-        }
-    }
+    // if (!(std::filesystem::exists(game_path))) {
+    //     std::filesystem::path game_path = game_name;
+    //     if (!(std::filesystem::exists(game_path))) {
+    //         std::cout << "The game \"" << game_name << "\" does not exist in the roms directory." << std::endl;
+    //         return 1;
+    //     }
+    // }
     
     if (!initSDL()) return 1;
 
@@ -125,7 +125,6 @@ int main(int argc, char** argv)
 
     SDL_Texture* frameTexture = createFrameTexture(renderer);
     if (frameTexture == nullptr) return 1;
-    std::cout << game_path.generic_string() << std::endl;
     cart = std::make_shared<Cartridge>(game_path.generic_string());
 
     nes.insertCartridge(cart);
