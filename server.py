@@ -5,7 +5,7 @@ import shutil
 import sqlite3
 import os
 import socket
-import sys
+import traceback
 from threading import Thread, Lock
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
@@ -78,7 +78,7 @@ class Server:
         self.server.listen()
 
         print(f"Server started, listening on {self.host}:{self.port}")
-
+        self.server.settimeout(1)  # set timeout for 1 second
         while self.running:
             try:
                 client_sock, addr = self.server.accept()
@@ -91,12 +91,13 @@ class Server:
             except socket.timeout:
                 continue
             except Exception as e:
-                print(f"An error occurred: {e}")
+                print(f"An error occurred: {traceback.format_exc()}")
 
     def stop(self):
         self.running = False
         for client_sock, _ in self.clients:
             client_sock.close()
+        time.sleep(1.1)  # wait for any ongoing accept() calls to timeout
         self.server.close()
 
     def handle_client(self, client_sock):
@@ -117,6 +118,7 @@ class Server:
         except Exception as e:
             print(f"An error occurred while handling a client: {e}")
             client_sock.close()
+            self.clients = [(c,a) for c,a in self.clients if c!=client_sock]
             return
         while True:
             try:
@@ -190,11 +192,13 @@ class Server:
                         self._send_encrypted(client_sock, key, "RQGMF~")  # game not found
                 elif command == "CLOSE":
                     client_sock.close()
+                    self.clients = [(c,a) for c,a in self.clients if c!=client_sock]
                     return
 
             except Exception as e:
                 print(f"Connection to the client lost")
                 client_sock.close()
+                self.clients = [(c,a) for c,a in self.clients if c!=client_sock]
                 break
         
     def _send_encrypted(self, client_sock, key, message):
@@ -231,12 +235,12 @@ class Server:
         return decrypted_message
         
 
-def stop_server(server):
+def stop_server(server: Server):
     while True:
         command = input()
         if command == "stop":
             server.stop()
-            break
+            return
 
 def main():
     parser = argparse.ArgumentParser(description="NESIDO Emulator Server")
@@ -250,13 +254,10 @@ def main():
     try:
         stop_thread = Thread(target=stop_server, args=(server,))
         stop_thread.start()
-
+        
         server.start()
-    except KeyboardInterrupt:
-        print("\nStopping server...")
-        server.stop()
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred: {traceback.format_exc}")
         server.stop()
 
 if __name__ == "__main__":
