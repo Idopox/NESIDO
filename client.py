@@ -184,7 +184,10 @@ class Client:
         ct_bytes = cipher.encrypt(pad(message.encode('utf-8'), AES.block_size))
         iv = cipher.iv
         ct = base64.b64encode(iv + ct_bytes).decode('utf-8')
-        sr.send_with_size(self.sock, ct.encode('utf-8'))
+        try:
+            sr.send_with_size(self.sock, ct.encode('utf-8'))
+        except socket.error:
+            self._close()
         print ("\nSent(%s)>>>" % (len(message),), end='')
         print ("%s"%(message[:min(len(message),100)],))
 
@@ -193,13 +196,12 @@ class Client:
             encrypted_data = sr.recv_by_size(self.sock)
             if not encrypted_data:
                 messagebox.showerror("ERROR", "Failed to receive data")
-
-                return None
+                raise Exception
 
             iv_ct = base64.b64decode(encrypted_data)
             if len(iv_ct) < 16:
                 messagebox.showerror("ERROR","Received data is too short to contain an IV")
-                return None
+                raise Exception
 
             iv = iv_ct[:16]
             ct = iv_ct[16:]
@@ -210,19 +212,19 @@ class Client:
 
             return decrypted_message
         except Exception as e:
-            messagebox.showerror(f"ERROR","while receiving and decrypting data: {e}")
-            return None
+            messagebox.showerror(f"ERROR","Connection lost")
+            self._close()
+
 
     def main(self):
         self.root.mainloop()
     
     def _close(self):
-        self._send_encrypted("CLOSE~")
+        self.sock.close()
         games = os.listdir("Emulator/tmpRoms")
         for game in games:
             os.remove("Emulator/tmpRoms/" + game)
         os.rmdir("Emulator/tmpRoms")
-        self.sock.close()
         self.root.destroy()
         exit()
         
